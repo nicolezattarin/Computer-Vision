@@ -19,3 +19,6 @@ void mean_color(Mat, int, int, int, double&, double&, double&);
 
 // gets the subimage of the image centered at the clicked pixel
 void square_subimage (Mat, int, int, int, bool);
+
+// apply a filter to the image
+void static_threshold_segmentation (Mat, int* , int* , Mat&, int*, bool);

@@ -58,3 +58,35 @@ void square_subimage (Mat img, int x, int y, int L, bool show = false){
         waitKey(0);
         destroyWindow("Sub image");}
 }
+
+void static_threshold_segmentation (Mat img, int* BGR_threshold, int* BGR_mean, Mat& new_img,
+                                    int* new_BGR = NULL, bool show = false){
+    // Segment the soccer shirts by applying a static threshold to the three channels R, G and B 
+    // (e.g., ΔR < 50, ΔG < 50, ΔB < 50)
+    
+    Mat img_seg;
+    img.copyTo(img_seg);
+    if (new_BGR == NULL){
+        new_BGR = new int[3];
+        new_BGR[0] = 0;
+        new_BGR[1] = 0;
+        new_BGR[2] = 0;
+    }
+    
+    for (int i = 0; i < img.rows; i++){
+        for (int j = 0; j < img.cols; j++){
+            Vec3b color = img.at<Vec3b>(i, j);
+            if (abs(color[0]-BGR_mean[0])< BGR_threshold[0] && 
+                abs(color[1]-BGR_mean[1]) < BGR_threshold[1] && 
+                abs(color[2]-BGR_mean[2]) < BGR_threshold[2]){
+                img_seg.at<Vec3b>(i, j) = Vec3b(new_BGR[0],new_BGR[1],new_BGR[2]);}
+        }
+    }
+    if (show){
+        namedWindow("Segmented image", WINDOW_AUTOSIZE);
+        imshow("Segmented image", img_seg);
+        waitKey(0);
+        destroyWindow("Segmented image");
+    }
+    new_img = img_seg;
+    }
