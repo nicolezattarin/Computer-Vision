@@ -17,3 +17,8 @@ The main program, given an image and a set of thresholds, one for each BGR chann
 2. Captures the left click of the mouse and computes the mean RGB color over a square of size 9x9 pixels centered on the left click;
 3. Segments the mean color selected by applying a static threshold to the three channels R, G and B;
 4. Applies a new color to the selected regions (we use BGR = (37,201,92)).
+
+### Histogram equalization
+In [histogram_equalization](https://github.com/nicolezattarin/Computer-Vision/tree/main/histogram_equalization) we implement a histogram equalization algorithm in RGB and BGR2HSV color spaces.
+Given an image, the program computes the histogram of each channel of the image, in order to and apply equalization to the three channels independently in the case of RGB and to the last channel for what concerns BGR2HSV.
+We plot the histograms of the original image, the equalized image and save the result in a new folder.
