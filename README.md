@@ -20,5 +20,6 @@ The main program, given an image and a set of thresholds, one for each BGR chann
 
 ### Histogram equalization
 In [histogram_equalization](https://github.com/nicolezattarin/Computer-Vision/tree/main/histogram_equalization) we implement a histogram equalization algorithm in RGB and BGR2HSV color spaces.
+
 Given an image, the program computes the histogram of each channel of the image, in order to and apply equalization to the three channels independently in the case of RGB and to the last channel for what concerns BGR2HSV.
 We plot the histograms of the original image, the equalized image and save the result in a new folder.
