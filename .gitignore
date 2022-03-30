@@ -3,6 +3,9 @@ histogram_equalization/results*
 # Prerequisites
 *.d
 
+# mac 
+*.DS_Store
+
 # Compiled Object files
 *.slo
 *.lo
