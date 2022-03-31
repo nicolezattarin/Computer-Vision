@@ -20,9 +20,8 @@ The main program, given an image and a set of thresholds, one for each BGR chann
 
 An example running the code with `./main roma.jpeg 50 50 50`:
 
-<p align="center">
-<img src="segmenting_threshold/roma.jpeg"  width="500"/> </p> <p align="center">
-<img src="segmenting_threshold/seg_roma.jpeg"  width="500"/> </p> 
+
+<img src="segmenting_threshold/roma.jpeg"  width="500"/> </p> <img src="segmenting_threshold/seg_roma.jpeg"  width="500"/> </p> 
 
 ### Histogram equalization
 In [histogram_equalization](https://github.com/nicolezattarin/Computer-Vision/tree/main/histogram_equalization) we implement a histogram equalization algorithm in RGB and BGR2HSV color spaces.
