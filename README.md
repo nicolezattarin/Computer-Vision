@@ -32,10 +32,11 @@ We plot the histograms of the original image, the equalized image and save the r
 An example follows: original photo, RGB equalization  HSV equalization 
 
 <p float="center">
-  <img src="histogram_qualization/barbecue.png" width="300" />
-  <img src="histogram_qualization/results/eq_image_RGB.png" width="300" />
-   <img src="histogram_qualization/results/eq_image_BGR2HSV.png" width="300" />
+  <img src="histogram_qualization/barbecue.png" width="270" />
+  <img src="histogram_qualization/results/eq_image_RGB.png" width="270" />
+   <img src="histogram_qualization/results/eq_image_BGR2HSV.png" width="270" />
 </p>
+
 
 ### Filtering
 In [filtering](https://github.com/nicolezattarin/Computer-Vision/tree/main/filtering) we provide an API and a test code to perform median, gaussian and bilateral filtering of a given image. Parameters can be tuned by means of trackbars once the image is shown.
