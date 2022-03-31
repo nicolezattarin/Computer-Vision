@@ -43,9 +43,9 @@ In [filtering](https://github.com/nicolezattarin/Computer-Vision/tree/main/filte
 
 An example of interface follows:
 <p float="center">
-  <img src="filtering/results/median.png" width="300" />
-  <img src="filtering/results/gaussian.png" width="300" />
-   <img src="filtering/results/bilateral.png" width="300" />
+  <img src="filtering/results/median.png" width="270" />
+  <img src="filtering/results/gaussian.png" width="270" />
+   <img src="filtering/results/bilateral.png" width="270" />
 </p>
 
 
