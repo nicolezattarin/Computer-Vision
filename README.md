@@ -19,7 +19,7 @@ The main program, given an image and a set of thresholds, one for each BGR chann
 4. Applies a new color to the selected regions (we use BGR = (37,201,92)).
 
 An example running the code with `./main roma.jpeg 50 50 50`:
-![](egmenting_threshold/roma.jpeg)![](segmenting_threshold/seg_roma.jpeg)
+![](segmenting_threshold/roma.jpeg) ![](segmenting_threshold/seg_roma.jpeg)
 
 <img src="segmenting_threshold/roma.jpeg"  width="500"/> </p> <img src="segmenting_threshold/seg_roma.jpeg"  width="500"/> </p> 
 
