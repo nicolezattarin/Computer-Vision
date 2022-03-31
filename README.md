@@ -19,11 +19,10 @@ The main program, given an image and a set of thresholds, one for each BGR chann
 4. Applies a new color to the selected regions (we use BGR = (37,201,92)).
 
 An example running the code with `./main roma.jpeg 50 50 50`:
-
-<p align="center">
-<img src="segmenting_threshold/roma.jpeg"  width="400"/> </p> <p align="center">
-<img src="segmenting_threshold/seg_roma.jpeg"  width="400"/> </p> 
-
+<p float="center">
+  <img src="segmenting_threshold/roma.jpeg" width="400" />
+  <img src="segmenting_threshold/seg_roma.jpeg" width="400" />
+</p>
 ### Histogram equalization
 In [histogram_equalization](https://github.com/nicolezattarin/Computer-Vision/tree/main/histogram_equalization) we implement a histogram equalization algorithm in RGB and BGR2HSV color spaces.
 
@@ -31,6 +30,7 @@ Given an image, the program computes the histogram of each channel of the image,
 We plot the histograms of the original image, the equalized image and save the result in a new folder.
 
 An example follows: original photo, RGB equalization  HSV equalization 
+
 
 <p align="center">
 <img src="histogram_qualization/barbecue.png"  width="200"/> </p> <p align="center">
