@@ -45,5 +45,5 @@ void MedianFilter::filtering(){
 /*                               BILATERAL FILTER                             */
 /*----------------------------------------------------------------------------*/
 void BilateralFilter::filtering(){
-    cv::bilateralFilter(_in_image, _out_image, _size, _pixel_diameter, _sigma_range, _sigma_space);
+    cv::bilateralFilter(_in_image, _out_image, _pixel_diameter, _sigma_range, _sigma_space);
 }

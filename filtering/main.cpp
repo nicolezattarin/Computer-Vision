@@ -25,13 +25,16 @@ static void on_trackbar(int, void *p) {
     // cout <<"size: "<<myparams->size<<endl;
 
     if (myparams->type == MEDIAN) { 
+            cout << "MEDIAN size: " << myparams->size<< endl;
             MedianFilter* filter = static_cast<MedianFilter*>(myparams->filter);  
             filter->setSize(myparams->size);
             filter->filtering();
             imshow(myparams->window_name, filter->getOutImage());
         }
     else if (myparams->type == GAUSSIAN) {
-            GaussianFilter* filter = static_cast<GaussianFilter*>(myparams->filter);  
+            GaussianFilter* filter = static_cast<GaussianFilter*>(myparams->filter); 
+            cout << "GAUSSIAN sigma: " << myparams->sigma1 << 
+                            ", size:" << myparams->size << endl;
             filter->setSize(myparams->size);
             filter->setSigma(myparams->sigma1);
             filter->filtering();
@@ -39,7 +42,9 @@ static void on_trackbar(int, void *p) {
         }
     else if (myparams->type == BILATERAL) {
             BilateralFilter* filter = static_cast<BilateralFilter*>(myparams->filter);
-            filter->setSize(myparams->size);
+            cout << "BILATERAL sigma1: " << myparams->sigma1 << 
+                            ", sigma2: " << myparams->sigma2 << 
+                            ", size: " << myparams->size << endl;
             filter->setPixelDiameter(9);
             filter->setSigmaRange(myparams->sigma1);
             filter->setSigmaSpace(myparams->sigma2);
@@ -49,10 +54,9 @@ static void on_trackbar(int, void *p) {
 }
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv){
     if (argc != 3){
-        cout << "usage: ./main <image name> <save folder>" << endl;
+        cout << "usage: ./main <image name> " << endl;
         return -1;}
 
     // Loads the image image 
@@ -62,7 +66,6 @@ int main(int argc, char** argv)
     if (!img.data) {
         cout << "No image data" << endl;
         return -1;}
-
 
     // MEDIAN FILTER
     int size_slider_m = 1;
@@ -74,28 +77,27 @@ int main(int argc, char** argv)
     
 
     // GAUSSIAN FILTER
-    int size_slider = 1;
+    int size_slider = 200;
     int sigma_slider = 1;
     namedWindow("gaussian filter", WINDOW_AUTOSIZE);
     GaussianFilter* gaussian_filter = new GaussianFilter(img, size_slider, sigma_slider);
     params gaussian_params = { GAUSSIAN, gaussian_filter, img, "gaussian filter", size_slider, sigma_slider};
     imshow("gaussian filter", gaussian_filter->getInImage());
-    createTrackbar("size", "gaussian filter", &(gaussian_params.size), 20, on_trackbar, (void*)&gaussian_params);
-    createTrackbar("sigma", "gaussian filter", &(gaussian_params.sigma1), 200, on_trackbar, (void*)&gaussian_params);
+    createTrackbar("size", "gaussian filter", &(gaussian_params.size), 200, on_trackbar, (void*)&gaussian_params);
+    createTrackbar("sigma", "gaussian filter", &(gaussian_params.sigma1), 20, on_trackbar, (void*)&gaussian_params);
 
     // BILATERAL FILTER
     int size_slider_b = 1;
-    int sigma_slider_b = 40;
-    int sigma_slider_b2 = 40;
+    int sigma_slider_b = 1;
+    int sigma_slider_b2 = 1;
     namedWindow("bilateral filter", WINDOW_AUTOSIZE);
     BilateralFilter* bilateral_filter = new BilateralFilter(img, size_slider_b, sigma_slider_b, sigma_slider_b2);
     params bilateral_params = { BILATERAL, bilateral_filter, img, "bilateral filter", size_slider_b, sigma_slider_b, sigma_slider_b2};
     imshow("bilateral filter", bilateral_filter->getInImage());
-    createTrackbar("size", "bilateral filter", &(bilateral_params.size), 20, on_trackbar, (void*)&bilateral_params);
+    createTrackbar("size", "bilateral filter", &(bilateral_params.size), 200, on_trackbar, (void*)&bilateral_params);
     createTrackbar("sigma_range", "bilateral filter", &(bilateral_params.sigma1), 200, on_trackbar, (void*)&bilateral_params);
     createTrackbar("sigma_space", "bilateral filter", &(bilateral_params.sigma2), 200, on_trackbar, (void*)&bilateral_params);
 
-     
     // wait for a key
     waitKey(0);
     return 0;
