@@ -23,7 +23,9 @@ An example running the code with `./main roma.jpeg 50 50 50`:
   <img src="segmenting_threshold/roma.jpeg" width="400" />
   <img src="segmenting_threshold/seg_roma.jpeg" width="400" />
 </p>
+
 ### Histogram equalization
+
 In [histogram_equalization](https://github.com/nicolezattarin/Computer-Vision/tree/main/histogram_equalization) we implement a histogram equalization algorithm in RGB and BGR2HSV color spaces.
 
 Given an image, the program computes the histogram of each channel of the image, in order to and apply equalization to the three channels independently in the case of RGB and to the last channel for what concerns BGR2HSV.
@@ -39,6 +41,7 @@ An example follows: original photo, RGB equalization  HSV equalization
 
 
 ### Filtering
+
 In [filtering](https://github.com/nicolezattarin/Computer-Vision/tree/main/filtering) we provide an API and a test code to perform median, gaussian and bilateral filtering of a given image. Parameters can be tuned by means of trackbars once the image is shown.
 
 An example of interface follows:
