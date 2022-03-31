@@ -31,24 +31,22 @@ We plot the histograms of the original image, the equalized image and save the r
 
 An example follows: original photo, RGB equalization  HSV equalization 
 
-
-<p align="center">
-<img src="histogram_qualization/barbecue.png"  width="200"/> </p> <p align="center">
-<img src="histogram_qualization/results/eq_image_RGB.png"  width="200"/> </p> <p align="center">
-<img src="histogram_qualization/results/eq_image_BGR2HSV.png"  width="200"/> </p> 
-
-e.g. green histograms: original photo, RGB equalization  HSV equalization 
-
-<img src="histogram_qualization/results/original_histo: green.png"  width="200"/> </p> <img src="histogram_qualization/results/histo_eq_image_RGB: green.png"  width="200"/> </p> </p> <img src="histogram_qualization/results/histo_eq_image_BGR2HSV: green.png"  width="200"/> </p> 
-
+<p float="center">
+  <img src="histogram_qualization/barbecue.png" width="300" />
+  <img src="histogram_qualization/results/eq_image_RGB.png" width="300" />
+   <img src="histogram_qualization/results/eq_image_BGR2HSV.png" width="300" />
+</p>
 
 ### Filtering
 In [filtering](https://github.com/nicolezattarin/Computer-Vision/tree/main/filtering) we provide an API and a test code to perform median, gaussian and bilateral filtering of a given image. Parameters can be tuned by means of trackbars once the image is shown.
 
 An example of interface follows:
-original photo, RGB equalization  HSV equalization 
+<p float="center">
+  <img src="filtering/results/median.png" width="300" />
+  <img src="filtering/results/gaussian.png" width="300" />
+   <img src="filtering/results/bilateral.png" width="300" />
+</p>
 
-<img src="filtering/results/median.png"  width="300"/> </p> <img src="filtering/results/gaussian.png"  width="300"/> </p> </p> <img src="filtering/results/bilateral.png"  width="300"/> </p> 
 
 
 
