@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     Mat img_seg = img.clone();
      // of the color has components which are close to the mean value selected, we set the pixel to (37,201,92)
     static_threshold_segmentation (img, BGR_threshold, BGR_mean, img_seg, BGR_new, true);
-
+    imwrite ("seg_"+string(argv[1]), img_seg);
 	destroyAllWindows(); // Destroy all the windows
     return 0;
 }

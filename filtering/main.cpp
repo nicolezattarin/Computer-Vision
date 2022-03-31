@@ -42,8 +42,8 @@ static void on_trackbar(int, void *p) {
         }
     else if (myparams->type == BILATERAL) {
             BilateralFilter* filter = static_cast<BilateralFilter*>(myparams->filter);
-            cout << "BILATERAL sigma1: " << myparams->sigma1 << 
-                            ", sigma2: " << myparams->sigma2 << 
+            cout << "BILATERAL sigma range: " << myparams->sigma1 << 
+                            ", sigma space: " << myparams->sigma2 << 
                             ", size: " << myparams->size << endl;
             filter->setPixelDiameter(9);
             filter->setSigmaRange(myparams->sigma1);
@@ -88,15 +88,15 @@ int main(int argc, char** argv){
 
     // BILATERAL FILTER
     int size_slider_b = 1;
-    int sigma_slider_b = 1;
-    int sigma_slider_b2 = 1;
+    int sigma_slider_b = 5;
+    int sigma_slider_b2 = 5;
     namedWindow("bilateral filter", WINDOW_AUTOSIZE);
     BilateralFilter* bilateral_filter = new BilateralFilter(img, size_slider_b, sigma_slider_b, sigma_slider_b2);
     params bilateral_params = { BILATERAL, bilateral_filter, img, "bilateral filter", size_slider_b, sigma_slider_b, sigma_slider_b2};
     imshow("bilateral filter", bilateral_filter->getInImage());
-    createTrackbar("size", "bilateral filter", &(bilateral_params.size), 200, on_trackbar, (void*)&bilateral_params);
-    createTrackbar("sigma_range", "bilateral filter", &(bilateral_params.sigma1), 200, on_trackbar, (void*)&bilateral_params);
-    createTrackbar("sigma_space", "bilateral filter", &(bilateral_params.sigma2), 200, on_trackbar, (void*)&bilateral_params);
+    createTrackbar("size", "bilateral filter", &(bilateral_params.size), 100, on_trackbar, (void*)&bilateral_params);
+    createTrackbar("sigma_range", "bilateral filter", &(bilateral_params.sigma1), 300, on_trackbar, (void*)&bilateral_params);
+    createTrackbar("sigma_space", "bilateral filter", &(bilateral_params.sigma2), 300, on_trackbar, (void*)&bilateral_params);
 
     // wait for a key
     waitKey(0);
