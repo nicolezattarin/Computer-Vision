@@ -1,0 +1,140 @@
+#include <opencv2/opencv.hpp>
+#include "opencv2/highgui/highgui.hpp"
+#include "func.h"
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <map>
+#include <thread>
+#include <chrono>
+
+using namespace std;
+using namespace cv;
+using std::this_thread::sleep_for;
+
+double RHO_CELL_SIZE = 1;
+double THETA_CELL_SIZE = CV_PI/180;
+string WINDOW_EDGES = "Edge Map";
+string WINDOW_ORIGINAL = "Original image";
+string WINDOW_LINES = "Line detection";
+
+
+int main(int argc, char** argv)
+{
+    if (argc != 4){
+        cout << "Usage: " << argv[0] << " <image_name> <tune canny> <tune HoughLines>" << endl;
+        return -1;}
+    string pathImage = argv[1];
+    bool tuneCanny = atoi(argv[2]);
+    bool tuneHLines = atoi(argv[3]);
+    cout << "Image path: " << pathImage << endl;
+    cout << "tune Canny: " << tuneCanny << endl;
+    cout << "tune HoughLines: " << tuneHLines << endl;
+
+    // load parameters from file
+    string pathParams = "params.txt";
+    int nparams = countLines(pathParams);
+    map<string, double> params;
+    params = loadParams(pathParams);
+    cout << "\n\nParameters: " << nparams << endl;
+    for (auto it = params.begin(); it != params.end(); it++)
+        cout << it->first << " " << it->second << endl;
+    
+
+    // Loads the image image 
+	Mat img = imread(pathImage); 
+    if (!img.data) {
+        cout << "\nNo image data" << endl;
+        return -1;}
+
+    // work on the grey scale image
+    Mat greyImg;
+    cvtColor(img, greyImg, COLOR_BGR2GRAY);
+
+    // show imag
+    namedWindow(WINDOW_ORIGINAL, WINDOW_AUTOSIZE);   
+    imshow(WINDOW_ORIGINAL, img);
+
+    // EDGE DETECTION 
+    // Generate the edge map with the Canny algorithm. 
+    Mat edgeMap;
+    namedWindow(WINDOW_EDGES, WINDOW_AUTOSIZE);  
+
+    // if we tune the parameters we only work on that, 
+    // to perform all the steps set the tuning flags to false
+    if (tuneCanny == 1){
+        // setup params
+        CannyParams cParams = {static_cast<int>(params["lowThreshold_canny"]), 
+                                static_cast<int>(params["highThreshold_canny"]), 
+                                static_cast<int>(params["sigma_canny"]), 
+                                greyImg, 
+                                edgeMap, 
+                                WINDOW_EDGES};
+
+        imshow(WINDOW_EDGES, greyImg);
+        cout << "\nWarning: you can tune the lower and higher thresholds with the trackbars" << endl;
+        cout << "While the sigma is fixed in the file, sigma must be between 3 and 7" << endl;
+        createTrackbar("lowThreshold", WINDOW_EDGES, &(cParams.lowThreshold), 500, on_trackbar_canny, (void*)&cParams);
+        createTrackbar("highThreshold", WINDOW_EDGES, &(cParams.highThreshold), 800, on_trackbar_canny, (void*)&cParams);
+        waitKey(0);
+        return 0;
+    } 
+    else {
+        Canny(greyImg, 
+            edgeMap, 
+            static_cast<int>(params["lowThreshold_canny"]), 
+            static_cast<int>(params["highThreshold_canny"]), 
+            static_cast<int>(params["sigma_canny"]));
+        imshow(WINDOW_EDGES, edgeMap);
+    }
+
+    // int flag;
+    // cout << "Program is paused !\n" << "Press Enter to continue\n";
+    // flag = getchar();
+    
+    // HOUGH LINES DETECTION
+
+    // Line detection
+    // Use the Edge Map as input for the standard Hough transform. 
+    // The Hough transform is a line detection algorithm.
+    vector<Vec2f> lines; //Array of 2-elements vectors (ρ,θ)
+    Mat LinesImg = img.clone();
+    namedWindow(WINDOW_LINES, WINDOW_AUTOSIZE);  
+
+    if (tuneHLines == 1){
+        imshow( WINDOW_LINES, LinesImg);
+        HoughLinesParams hlParams = {static_cast<int>(params["threshold_HoughLines"]), 
+                                 static_cast<int>(params["minTheta_HoughLines"]), 
+                                 static_cast<int>(params["maxTheta_HoughLines"]), 
+                                 edgeMap,
+                                 LinesImg,
+                                 lines, 
+                                 WINDOW_LINES};
+        cout << "\nWarning: you can tune the threshold, minimum and maximum angle" << endl;
+        cout << "While the discretization of the grid is fixed by a global variable" << endl;
+        createTrackbar("threshold", WINDOW_LINES, &(hlParams.threshold), 700, on_trackbar_HLines, (void*)&hlParams);
+        createTrackbar("minTheta", WINDOW_LINES, &(hlParams.minTheta), 360, on_trackbar_HLines, (void*)&hlParams);
+        createTrackbar("maxTheta", WINDOW_LINES, &(hlParams.maxTheta), 360, on_trackbar_HLines, (void*)&hlParams);
+        waitKey(0);
+        return 0;
+      }
+    else{
+        HoughLines(edgeMap, lines, 
+                        RHO_CELL_SIZE, 
+                        THETA_CELL_SIZE, 
+                        params["threshold_HoughLines"], 0, 0, 
+                        params["minTheta_HoughLines"],
+                        params["maxTheta_HoughLines"]);
+        cout << "\n\n" << lines.size() << " point aligned detected" << endl;
+        DrawLines(WINDOW_LINES, LinesImg, lines);
+    }
+
+    
+
+    // createTrackbar("Threshold", windowNameOriginal, &(hlParams.threshold), 500, on_trackbar_HLines, (void*)&hlParams);
+
+    waitKey(0);
+
+
+    return 0;
+}

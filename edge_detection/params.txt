@@ -1,0 +1,8 @@
+sigma_canny 3
+lowThreshold_canny 500
+highThreshold_canny 800
+rho_HoughLines 1
+theta_HoughLines 0.05
+threshold_HoughLines 150
+minTheta_HoughLines 0
+maxTheta_HoughLines 180
