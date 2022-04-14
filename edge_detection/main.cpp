@@ -17,22 +17,33 @@ double THETA_CELL_SIZE = CV_PI/180;
 string WINDOW_EDGES = "Edge Map";
 string WINDOW_ORIGINAL = "Original image";
 string WINDOW_LINES = "Line detection";
+string WINDOW_FILLED_LINES = "Filled line detection";
 
 
 int main(int argc, char** argv)
 {
-    if (argc != 4){
-        cout << "Usage: " << argv[0] << " <image_name> <tune canny> <tune HoughLines>" << endl;
+    /**********************************************************
+     *              LOADING PARAMETERS FROM FILE              *
+     * *******************************************************/
+
+    if (argc != 5){
+        cout << "Usage: " << argv[0] << " <image_name> <params file path> <tune canny> <tune HoughLines>" << endl;
         return -1;}
     string pathImage = argv[1];
-    bool tuneCanny = atoi(argv[2]);
-    bool tuneHLines = atoi(argv[3]);
+    // get filename
+    string dir = "images/";
+    size_t pos = pathImage.find("images/")+dir.length();;      
+    string fileName = pathImage.substr (pos);
+
+    //get other cl args 
+    string pathParams = argv[2];
+    bool tuneCanny = atoi(argv[3]);
+    bool tuneHLines = atoi(argv[4]);
     cout << "Image path: " << pathImage << endl;
     cout << "tune Canny: " << tuneCanny << endl;
     cout << "tune HoughLines: " << tuneHLines << endl;
 
     // load parameters from file
-    string pathParams = "params.txt";
     int nparams = countLines(pathParams);
     map<string, double> params;
     params = loadParams(pathParams);
@@ -40,6 +51,9 @@ int main(int argc, char** argv)
     for (auto it = params.begin(); it != params.end(); it++)
         cout << it->first << " " << it->second << endl;
     
+    /**********************************************************
+     *                      ORIGINAL IMAGE                    *
+     * *******************************************************/
 
     // Loads the image image 
 	Mat img = imread(pathImage); 
@@ -55,7 +69,9 @@ int main(int argc, char** argv)
     namedWindow(WINDOW_ORIGINAL, WINDOW_AUTOSIZE);   
     imshow(WINDOW_ORIGINAL, img);
 
-    // EDGE DETECTION 
+    /**********************************************************
+                    EDGE DETECTION 
+    ***********************************************************/
     // Generate the edge map with the Canny algorithm. 
     Mat edgeMap;
     namedWindow(WINDOW_EDGES, WINDOW_AUTOSIZE);  
@@ -86,17 +102,14 @@ int main(int argc, char** argv)
             static_cast<int>(params["highThreshold_canny"]), 
             static_cast<int>(params["sigma_canny"]));
         imshow(WINDOW_EDGES, edgeMap);
+        imwrite("results/edgeMap_"+fileName, edgeMap);
     }
 
-    // int flag;
-    // cout << "Program is paused !\n" << "Press Enter to continue\n";
-    // flag = getchar();
-    
-    // HOUGH LINES DETECTION
+    /**********************************************************
+     *               HOUGH LINES DETECTION                    *
+     * *******************************************************/
 
-    // Line detection
     // Use the Edge Map as input for the standard Hough transform. 
-    // The Hough transform is a line detection algorithm.
     vector<Vec2f> lines; //Array of 2-elements vectors (ρ,θ)
     Mat LinesImg = img.clone();
     namedWindow(WINDOW_LINES, WINDOW_AUTOSIZE);  
@@ -125,16 +138,28 @@ int main(int argc, char** argv)
                         params["threshold_HoughLines"], 0, 0, 
                         params["minTheta_HoughLines"],
                         params["maxTheta_HoughLines"]);
-        cout << "\n\n" << lines.size() << " point aligned detected" << endl;
-        DrawLines(WINDOW_LINES, LinesImg, lines);
-    }
+        cout << "\n\n" << lines.size() << " lines detected" << endl;
+        
+        DrawInterceptionLines(LinesImg, lines);
+        imshow(WINDOW_LINES,LinesImg);
+        imwrite("results/Lines_"+fileName, LinesImg);
 
+        // FILLED VERSION
+        Mat filledLines = img.clone();
+        road2Img_processing (filledLines, lines);
+        namedWindow(WINDOW_FILLED_LINES, WINDOW_AUTOSIZE);  
+        imshow(WINDOW_FILLED_LINES, filledLines);
+        imwrite("results/FilldEdgeMap_"+fileName, edgeMap);
+    }
     
 
-    // createTrackbar("Threshold", windowNameOriginal, &(hlParams.threshold), 500, on_trackbar_HLines, (void*)&hlParams);
+    /**********************************************************
+     *               HOUGH CIRCLE DETECTION                   *
+     * *******************************************************/
+    
+    
+
 
     waitKey(0);
-
-
     return 0;
 }

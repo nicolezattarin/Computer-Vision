@@ -35,8 +35,14 @@ struct Line{ // a line is represented by two points a and b
 
 int countLines(const string );
 map<string, double> loadParams(const string);
-void PolarToCartesian(vector<Vec2f> &,vector<Line>&);
-void DrawLines(string, Mat&, vector<Vec2f>);
+vector<Point> PolarToCartesian(float, float);
+vector<Vec2f> CartesianToPolar(float x, float y);
+void DrawLines( Mat& , vector<Vec2f>);
+void DrawInterceptionLines(Mat& img, vector<Vec2f>lines);
+bool Intersection(Point2f, Point2f, Point2f, Point2f, Point2f& );
+void road2Img_processing (Mat&, vector<Vec2f> );
+bool isIntersecting(Point& p1, Point& p2, Point& q1, Point& q2);
+
 
 static void on_trackbar_canny(int, void *p) {
     CannyParams* cparams = static_cast<CannyParams*> (p);
@@ -67,7 +73,8 @@ static void on_trackbar_HLines(int, void *p){
     cout << "threshold: " << hparams->threshold << endl;
     cout << "minTheta: " << hparams->minTheta << endl;
     cout << "maxTheta: " << hparams->maxTheta << endl;
-    DrawLines(hparams->window_name, hparams->out_image, hparams->out_lines);
+    DrawLines(hparams->out_image, hparams->out_lines);
+    imshow(hparams->window_name, hparams->out_image);    
 }
 
 
