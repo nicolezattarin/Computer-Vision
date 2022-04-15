@@ -56,12 +56,11 @@ An example of interface follows:
 In [edge detection](https://github.com/nicolezattarin/Computer-Vision/tree/main/edge_detection) we test the Canny edge detector, the Hough transform for lines detection and the Hough circles detector. In particular we provide the capability to tune the parameters of the Canny edge detector, once these are fixed we can use the outcome of Canny to detect lines and circles.
 
 An example of ouput follows:
+<p float="center">
+<img src="edge_detection/images/road2.png" width="400" />
+<img src="edge_detection/results/edgeMap_road2.png" width="400" /></p>
 <p align="center">
-<img src="edge_detection/images/road2.png" width="400" /></p>
-<p align="center">
-  <img src="edge_detection/results/edgeMap_road2.png" width="400" /></p>
-<p align="center">
-  <img src="edge_detection/results/Circles_road2.png" width="400" /></p>
+  <img src="edge_detection/results/Circles_road2.png" width="500" /></p>
 
 
 
