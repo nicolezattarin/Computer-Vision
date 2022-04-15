@@ -50,6 +50,8 @@ int main(int argc, char** argv)
     cout << "tune HoughLines: " << tuneHLines << endl;
 
     // load parameters from file
+    //check if file exists
+    CheckFileExists(pathParams);
     int nparams = countLines(pathParams);
     map<string, double> params;
     params = loadParams(pathParams);
@@ -132,8 +134,8 @@ int main(int argc, char** argv)
         cout << "\nWarning: you can tune the threshold, minimum and maximum angle" << endl;
         cout << "While the discretization of the grid is fixed by a global variable" << endl;
         createTrackbar("threshold", WINDOW_LINES, &(hlParams.threshold), 700, on_trackbar_HLines, (void*)&hlParams);
-        createTrackbar("minTheta", WINDOW_LINES, &(hlParams.minTheta), 360, on_trackbar_HLines, (void*)&hlParams);
-        createTrackbar("maxTheta", WINDOW_LINES, &(hlParams.maxTheta), 360, on_trackbar_HLines, (void*)&hlParams);
+        createTrackbar("minTheta", WINDOW_LINES, &(hlParams.minTheta), 4, on_trackbar_HLines, (void*)&hlParams);
+        createTrackbar("maxTheta", WINDOW_LINES, &(hlParams.maxTheta), 4, on_trackbar_HLines, (void*)&hlParams);
         waitKey(0);
         return 0;
       }
@@ -150,8 +152,11 @@ int main(int argc, char** argv)
         imshow(WINDOW_LINES,LinesImg);
         imwrite("results/Lines_"+fileName, LinesImg);
 
-        // FILLED VERSION
-        road2Img_processing (filledLinesImg, lines);
+        // SPECIFIC PROCESSING FOR EACH IMAGE
+        if (fileName == "road2.png"){road2Img_processing (filledLinesImg, lines);}
+        else if (fileName == "road4.jpg"){road4Img_processing (filledLinesImg, lines);}
+        else if (fileName == "road3.jpg"){road3Img_processing (filledLinesImg, lines);}
+
         namedWindow(WINDOW_FILLED_LINES, WINDOW_AUTOSIZE);  
         imshow(WINDOW_FILLED_LINES, filledLinesImg);
         imwrite("results/FilldEdgeMap_"+fileName, filledLinesImg);
@@ -179,7 +184,7 @@ int main(int argc, char** argv)
                                  circlesImg, 
                                  circles,
                                  WINDOW_FILLED_CIRCLES};
-        createTrackbar("high threshold", WINDOW_FILLED_CIRCLES, &(hcParams.highThreshold), 200, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("high threshold", WINDOW_FILLED_CIRCLES, &(hcParams.highThreshold), 800, on_trackbar_HCircles, (void*)&hcParams);
         createTrackbar("center threshold", WINDOW_FILLED_CIRCLES, &(hcParams.centerThreshold), 200, on_trackbar_HCircles, (void*)&hcParams);
         createTrackbar("min distance", WINDOW_FILLED_CIRCLES, &(hcParams.minDistance), 10, on_trackbar_HCircles, (void*)&hcParams);
         createTrackbar("min radius", WINDOW_FILLED_CIRCLES, &(hcParams.minRadius), 10, on_trackbar_HCircles, (void*)&hcParams);

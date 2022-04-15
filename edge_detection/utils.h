@@ -17,6 +17,7 @@ struct Line{ // a line is represented by two points a and b
 *                  UTILS TO LOAD PARAMS                      *
 **************************************************************/
 
+void CheckFileExists(string);
 int countLines(const string );
 map<string, double> loadParams(const string);
 
@@ -46,5 +47,7 @@ void DrawInterceptionLines(Mat& img, vector<Vec2f>);
 bool Intersection(Point2f, Point2f, Point2f, Point2f, Point2f& );
 // gets two points defining a line, returns true if the intersection exists
 bool isIntersecting(Point&, Point&, Point&, Point&);
+
+void SortLinesBy (vector<Vec2f>& lines, int sortBy=1, bool ascending=false);
 
 #endif

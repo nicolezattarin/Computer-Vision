@@ -11,9 +11,9 @@ using namespace std;
 using namespace cv;
 
 /* SPECIFIC PROCESSING FOR EACH IMAGE TAKEN INTO ACCOUNT */
-
-// ROAD2
+void FillInBetween(Mat&, vector<Vec2f>, float, float, int, int, int);
 void road2Img_processing (Mat&, vector<Vec2f>); 
-
+void road4Img_processing (Mat&, vector<Vec2f>); 
+void road3Img_processing (Mat&, vector<Vec2f> );
 
 #endif
