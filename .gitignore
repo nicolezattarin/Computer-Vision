@@ -14,7 +14,14 @@ histogram_equalization/results*
 *.lo
 *.o
 *.obj
-
+# tex
+*.aux
+*.toc
+*.log
+*.pdf
+*.dvi
+*.ps
+*.eps
 # Precompiled Headers
 *.gch
 *.pch
