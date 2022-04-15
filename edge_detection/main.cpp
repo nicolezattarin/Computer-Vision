@@ -14,10 +14,13 @@ using std::this_thread::sleep_for;
 
 double RHO_CELL_SIZE = 1;
 double THETA_CELL_SIZE = CV_PI/180;
+double DP_HCIRCLES = 1;
+
 string WINDOW_EDGES = "Edge Map";
 string WINDOW_ORIGINAL = "Original image";
 string WINDOW_LINES = "Line detection";
 string WINDOW_FILLED_LINES = "Filled line detection";
+string WINDOW_FILLED_CIRCLES = "Filled lines-circles detection";
 
 
 int main(int argc, char** argv)
@@ -26,8 +29,8 @@ int main(int argc, char** argv)
      *              LOADING PARAMETERS FROM FILE              *
      * *******************************************************/
 
-    if (argc != 5){
-        cout << "Usage: " << argv[0] << " <image_name> <params file path> <tune canny> <tune HoughLines>" << endl;
+    if (argc != 6){
+        cout << "Usage: " << argv[0] << " <image_name> <params file path> <tune canny> <tune HoughLines> <tune HoughCircles>" << endl;
         return -1;}
     string pathImage = argv[1];
     // get filename
@@ -39,6 +42,7 @@ int main(int argc, char** argv)
     string pathParams = argv[2];
     bool tuneCanny = atoi(argv[3]);
     bool tuneHLines = atoi(argv[4]);
+    bool tuneHCircles = atoi(argv[5]);
     cout << "Image path: " << pathImage << endl;
     cout << "tune Canny: " << tuneCanny << endl;
     cout << "tune HoughLines: " << tuneHLines << endl;
@@ -61,10 +65,6 @@ int main(int argc, char** argv)
         cout << "\nNo image data" << endl;
         return -1;}
 
-    // work on the grey scale image
-    Mat greyImg;
-    cvtColor(img, greyImg, COLOR_BGR2GRAY);
-
     // show imag
     namedWindow(WINDOW_ORIGINAL, WINDOW_AUTOSIZE);   
     imshow(WINDOW_ORIGINAL, img);
@@ -75,6 +75,9 @@ int main(int argc, char** argv)
     // Generate the edge map with the Canny algorithm. 
     Mat edgeMap;
     namedWindow(WINDOW_EDGES, WINDOW_AUTOSIZE);  
+    // work on the grey scale image
+    Mat greyImg;
+    cvtColor(img, greyImg, COLOR_BGR2GRAY);
 
     // if we tune the parameters we only work on that, 
     // to perform all the steps set the tuning flags to false
@@ -112,6 +115,7 @@ int main(int argc, char** argv)
     // Use the Edge Map as input for the standard Hough transform. 
     vector<Vec2f> lines; //Array of 2-elements vectors (ρ,θ)
     Mat LinesImg = img.clone();
+    Mat filledLinesImg = img.clone();
     namedWindow(WINDOW_LINES, WINDOW_AUTOSIZE);  
 
     if (tuneHLines == 1){
@@ -145,18 +149,59 @@ int main(int argc, char** argv)
         imwrite("results/Lines_"+fileName, LinesImg);
 
         // FILLED VERSION
-        Mat filledLines = img.clone();
-        road2Img_processing (filledLines, lines);
+        road2Img_processing (filledLinesImg, lines);
         namedWindow(WINDOW_FILLED_LINES, WINDOW_AUTOSIZE);  
-        imshow(WINDOW_FILLED_LINES, filledLines);
-        imwrite("results/FilldEdgeMap_"+fileName, edgeMap);
+        imshow(WINDOW_FILLED_LINES, filledLinesImg);
+        imwrite("results/FilldEdgeMap_"+fileName, filledLinesImg);
     }
     
 
     /**********************************************************
-     *               HOUGH CIRCLE DETECTION                   *
-     * *******************************************************/
-    
+    *               HOUGH CIRCLE DETECTION                   *
+    * *******************************************************/
+
+    vector<Vec3f> circles; //each element is a 3-element floating-point vector (x, y, radius)
+    Mat circlesImg = filledLinesImg.clone(); //start from filled lines version
+    namedWindow(WINDOW_FILLED_CIRCLES, WINDOW_AUTOSIZE);  
+    medianBlur(greyImg, greyImg, 3);
+    cout << "\nMedian Blur done" << endl;
+
+
+    if (tuneHCircles == 1){
+        imshow(WINDOW_FILLED_CIRCLES, circlesImg);
+        HoughCirclesParams hcParams = {static_cast<int>(params["highThreshold_HoughCircles"]), 
+                                 static_cast<int>(params["centerThreshold_HoughCircles"]), 
+                                 static_cast<int>(params["minDist_HoughCircles"]),
+                                 static_cast<int>(params["minRad_HoughCircles"]), 
+                                 static_cast<int>(params["maxRad_HoughCircles"]), 
+                                 greyImg,
+                                 circlesImg, 
+                                 circles,
+                                 WINDOW_FILLED_CIRCLES};
+        createTrackbar("high threshold", WINDOW_FILLED_CIRCLES, &(hcParams.highThreshold), 200, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("center threshold", WINDOW_FILLED_CIRCLES, &(hcParams.centerThreshold), 200, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("min distance", WINDOW_FILLED_CIRCLES, &(hcParams.minDistance), 10, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("min radius", WINDOW_FILLED_CIRCLES, &(hcParams.minRadius), 10, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("max radius", WINDOW_FILLED_CIRCLES, &(hcParams.maxRadius), 100, on_trackbar_HCircles, (void*)&hcParams);
+
+        waitKey(0);
+        return 0;
+      }
+    else{
+        // work on the grey scale image
+        HoughCircles(greyImg, circles, HOUGH_GRADIENT, 
+                        1, //1 = dp = 1
+                        (params["minDist_HoughCircles"]), 
+                        (params["highThreshold_HoughCircles"]), 
+                        (params["centerThreshold_HoughCircles"]), 
+                        (params["minRad_HoughCircles"]), 
+                        (params["maxRad_HoughCircles"]));
+        cout << "\n\n" << circles.size() << " circles detected" << endl;
+        DrawFilledCircles(circlesImg, circles);
+        imshow(WINDOW_FILLED_CIRCLES, circlesImg);
+        imwrite("results/Circles_"+fileName, circlesImg);
+
+    }
     
 
 

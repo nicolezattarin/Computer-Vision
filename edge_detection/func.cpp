@@ -47,7 +47,6 @@ vector<Vec2f> CartesianToPolar(float x, float y){
     return point;
 }
 
-
 // gets polar lines from the image
 void DrawLines( Mat& img, vector<Vec2f>lines) {
     for( size_t i = 0; i < lines.size(); i++ ){
@@ -56,6 +55,23 @@ void DrawLines( Mat& img, vector<Vec2f>lines) {
         Point pt1 = CartesianLine[0], pt2 = CartesianLine[1];
         line(img, pt1, pt2, Scalar(0,0,255));
         }
+}
+
+//each element is a 3-element floating-point vector (x, y, radius)
+void DrawCircles(Mat& img, vector<Vec3f>circles){
+    for( size_t i = 0; i < circles.size(); i++ ){
+        Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+        int radius = cvRound(circles[i][2]);
+        circle( img, center, radius, Scalar(0,255,0), 2);
+    }
+}
+
+void DrawFilledCircles(Mat& img, vector<Vec3f>circles){
+    for( size_t i = 0; i < circles.size(); i++ ){
+        Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+        int radius = cvRound(circles[i][2]);
+        circle( img, center, radius, Scalar(0,255,0),  FILLED );
+    }
 }
 
 // draw lines up to the intersection

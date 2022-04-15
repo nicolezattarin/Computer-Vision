@@ -29,6 +29,18 @@ struct HoughLinesParams{
     string window_name;
 };
 
+struct HoughCirclesParams{
+    int highThreshold;
+    int centerThreshold;
+    int minDistance;
+    int minRadius;
+    int maxRadius;
+    Mat in_image;
+    Mat out_image;
+    vector<Vec3f> out_circles;
+    string window_name;
+};
+
 struct Line{ // a line is represented by two points a and b
     Point a, b;
 };
@@ -38,6 +50,9 @@ map<string, double> loadParams(const string);
 vector<Point> PolarToCartesian(float, float);
 vector<Vec2f> CartesianToPolar(float x, float y);
 void DrawLines( Mat& , vector<Vec2f>);
+void DrawCircles(Mat& img, vector<Vec3f>circles);
+void DrawFilledCircles(Mat& img, vector<Vec3f>circles);
+
 void DrawInterceptionLines(Mat& img, vector<Vec2f>lines);
 bool Intersection(Point2f, Point2f, Point2f, Point2f, Point2f& );
 void road2Img_processing (Mat&, vector<Vec2f> );
@@ -62,7 +77,7 @@ static void on_trackbar_HLines(int, void *p){
     HoughLinesParams *hparams = static_cast<HoughLinesParams*> (p);
     double rho = 1;
     double theta = CV_PI/180;
-
+    Mat oldOutimg = hparams->out_image.clone();
     HoughLines(hparams->in_image, hparams->out_lines, 
                 rho, 
                 theta, 
@@ -74,8 +89,31 @@ static void on_trackbar_HLines(int, void *p){
     cout << "minTheta: " << hparams->minTheta << endl;
     cout << "maxTheta: " << hparams->maxTheta << endl;
     DrawLines(hparams->out_image, hparams->out_lines);
-    imshow(hparams->window_name, hparams->out_image);    
+    imshow(hparams->window_name, hparams->out_image);  
+    hparams->out_image = oldOutimg;
 }
 
+static void on_trackbar_HCircles(int, void *p){
+    HoughCirclesParams *hparams = static_cast<HoughCirclesParams*> (p);
+    string window_name;
+    Mat oldOutimg = hparams->out_image.clone();
+    HoughCircles(hparams->in_image, hparams->out_circles, 
+                HOUGH_GRADIENT, 
+                1, 
+                hparams->minDistance, 
+                hparams->highThreshold,
+                hparams->centerThreshold,
+                hparams->minRadius,
+                hparams->maxRadius);
+    cout << "\nHoughCircle params: " << endl;
+    cout << "highThreshold: " << hparams->highThreshold << endl;
+    cout << "centerThreshold: " << hparams->centerThreshold << endl;
+    cout << "minDistance: " << hparams->minDistance << endl;
+    cout << "minRadius: " << hparams->minRadius << endl;
+    cout << "maxRadius: " << hparams->maxRadius << endl;
+    DrawCircles(hparams->out_image, hparams->out_circles);
+    imshow(hparams->window_name, hparams->out_image); 
+    hparams->out_image = oldOutimg;
+}
 
 #endif
