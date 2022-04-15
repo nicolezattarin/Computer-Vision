@@ -18,7 +18,6 @@ histogram_equalization/results*
 *.aux
 *.toc
 *.log
-*.pdf
 *.dvi
 *.ps
 *.eps
