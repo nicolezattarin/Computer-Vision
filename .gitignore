@@ -3,6 +3,9 @@ histogram_equalization/results*
 # Prerequisites
 *.d
 
+# executables
+*.exe
+
 # mac 
 *.DS_Store
 
