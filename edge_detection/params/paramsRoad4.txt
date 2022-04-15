@@ -1,0 +1,13 @@
+sigma_canny 3
+lowThreshold_canny 500
+highThreshold_canny 700
+rho_HoughLines 1
+theta_HoughLines 0.05
+threshold_HoughLines 130
+minTheta_HoughLines 0
+maxTheta_HoughLines 180
+highThreshold_HoughCircles 100
+centerThreshold_HoughCircles 25
+minDist_HoughCircles 1
+minRad_HoughCircles 0
+maxRad_HoughCircles 10

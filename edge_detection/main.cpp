@@ -157,7 +157,6 @@ int main(int argc, char** argv)
         imwrite("results/FilldEdgeMap_"+fileName, filledLinesImg);
     }
     
-
     /**********************************************************
     *               HOUGH CIRCLE DETECTION                   *
     * *******************************************************/
@@ -202,9 +201,7 @@ int main(int argc, char** argv)
         DrawFilledCircles(circlesImg, circles);
         imshow(WINDOW_FILLED_CIRCLES, circlesImg);
         imwrite("results/Circles_"+fileName, circlesImg);
-
     }
-    
 
 
     waitKey(0);
