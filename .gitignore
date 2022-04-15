@@ -22,6 +22,7 @@ histogram_equalization/results*
 *.dvi
 *.ps
 *.eps
+*.gz
 # Precompiled Headers
 *.gch
 *.pch
