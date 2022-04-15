@@ -97,8 +97,10 @@ int main(int argc, char** argv)
         imshow(WINDOW_EDGES, greyImg);
         cout << "\nWarning: you can tune the lower and higher thresholds with the trackbars" << endl;
         cout << "While the sigma is fixed in the file, sigma must be between 3 and 7" << endl;
-        createTrackbar("lowThreshold", WINDOW_EDGES, &(cParams.lowThreshold), 500, on_trackbar_canny, (void*)&cParams);
-        createTrackbar("highThreshold", WINDOW_EDGES, &(cParams.highThreshold), 800, on_trackbar_canny, (void*)&cParams);
+        createTrackbar("lowThreshold", WINDOW_EDGES, 
+                        &(cParams.lowThreshold), 500, on_trackbar_canny, (void*)&cParams);
+        createTrackbar("highThreshold", WINDOW_EDGES, 
+                        &(cParams.highThreshold), 800, on_trackbar_canny, (void*)&cParams);
         waitKey(0);
         return 0;
     } 
@@ -133,9 +135,12 @@ int main(int argc, char** argv)
                                  WINDOW_LINES};
         cout << "\nWarning: you can tune the threshold, minimum and maximum angle" << endl;
         cout << "While the discretization of the grid is fixed by a global variable" << endl;
-        createTrackbar("threshold", WINDOW_LINES, &(hlParams.threshold), 700, on_trackbar_HLines, (void*)&hlParams);
-        createTrackbar("minTheta", WINDOW_LINES, &(hlParams.minTheta), 4, on_trackbar_HLines, (void*)&hlParams);
-        createTrackbar("maxTheta", WINDOW_LINES, &(hlParams.maxTheta), 4, on_trackbar_HLines, (void*)&hlParams);
+        createTrackbar("threshold", WINDOW_LINES, 
+                        &(hlParams.threshold), 700, on_trackbar_HLines, (void*)&hlParams);
+        createTrackbar("minTheta", WINDOW_LINES, 
+                        &(hlParams.minTheta), 4, on_trackbar_HLines, (void*)&hlParams);
+        createTrackbar("maxTheta", WINDOW_LINES, 
+                        &(hlParams.maxTheta), 4, on_trackbar_HLines, (void*)&hlParams);
         waitKey(0);
         return 0;
       }
@@ -184,11 +189,16 @@ int main(int argc, char** argv)
                                  circlesImg, 
                                  circles,
                                  WINDOW_FILLED_CIRCLES};
-        createTrackbar("high threshold", WINDOW_FILLED_CIRCLES, &(hcParams.highThreshold), 800, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("center threshold", WINDOW_FILLED_CIRCLES, &(hcParams.centerThreshold), 200, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("min distance", WINDOW_FILLED_CIRCLES, &(hcParams.minDistance), 10, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("min radius", WINDOW_FILLED_CIRCLES, &(hcParams.minRadius), 10, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("max radius", WINDOW_FILLED_CIRCLES, &(hcParams.maxRadius), 100, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("high threshold", WINDOW_FILLED_CIRCLES, 
+                        &(hcParams.highThreshold), 800, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("center threshold", WINDOW_FILLED_CIRCLES, 
+                        &(hcParams.centerThreshold), 200, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("min distance", WINDOW_FILLED_CIRCLES, 
+                        &(hcParams.minDistance), 10, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("min radius", WINDOW_FILLED_CIRCLES, 
+                        &(hcParams.minRadius), 10, on_trackbar_HCircles, (void*)&hcParams);
+        createTrackbar("max radius", WINDOW_FILLED_CIRCLES, 
+                        &(hcParams.maxRadius), 100, on_trackbar_HCircles, (void*)&hcParams);
 
         waitKey(0);
         return 0;
@@ -207,8 +217,6 @@ int main(int argc, char** argv)
         imshow(WINDOW_FILLED_CIRCLES, circlesImg);
         imwrite("results/Circles_"+fileName, circlesImg);
     }
-
-
     waitKey(0);
     return 0;
 }
