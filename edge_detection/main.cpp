@@ -1,6 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
-#include "func.h"
+#include "utils.h"
+#include "images_processing.h"
+#include "trackbars.h"
 #include <iostream>
 #include <vector>
 #include <fstream>

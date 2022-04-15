@@ -1,7 +1,9 @@
-#include "func.h"
+#include "utils.h"
 #include <cmath>
-// coun lines in a file
 
+/*************************************************************
+*                  UTILS TO LOAD PARAMS                      *
+**************************************************************/
 int countLines(const string filename)
 {
     std::ifstream in(filename);
@@ -28,6 +30,10 @@ map<string, double> loadParams(const string filename)
     return params;
 }
 
+/*************************************************************
+*                  POLAR <-> CARTESIAN                       *
+**************************************************************/ 
+
 vector<Point> PolarToCartesian(float rho, float theta){
     Point pt1, pt2;
     double ct = cos(theta), st = sin(theta); 
@@ -46,6 +52,10 @@ vector<Vec2f> CartesianToPolar(float x, float y){
     vector<Vec2f> point = {rho, theta};
     return point;
 }
+
+/*************************************************************
+*                    DRAW ON IMAGES                          *
+**************************************************************/ 
 
 // gets polar lines from the image
 void DrawLines( Mat& img, vector<Vec2f>lines) {
@@ -119,25 +129,3 @@ bool Intersection(Point2f p1, Point2f p2, Point2f p3, Point2f p4,  Point2f& inte
     else{return false;}
 }
 
-void road2Img_processing (Mat& img, vector<Vec2f> lines){
-    // get all the lines and for all lines that 
-    // have intersection, fill the gap between them
-    for( size_t i = 0; i < lines.size(); i++ ){
-        for (size_t j = i; j< lines.size(); j++){
-            vector<Point> line1 = PolarToCartesian(lines[i][0], lines[i][1]);
-            vector<Point> line2 = PolarToCartesian(lines[j][0], lines[j][1]);
-            Point2f intersection;
-            if (Intersection(line1[0], line1[1], line2[0], line2[1], intersection) && intersection.y>165){
-                vector<Point> vertices(3);
-                // we choose as vertices the points of the lines with lower y
-                if (line1[0].y>line1[1].y){vertices[0] = line1[0];}
-                else {vertices[0] = line1[1];}
-                if (line2[0].y>line2[1].y){vertices[1] = line2[0];}
-                else {vertices[1] = line2[1];}
-                vertices[2] = intersection;
-
-                fillConvexPoly(img, vertices, Scalar(0,0,255));// gets vertices of polygon to fill
-            }
-        }
-    }
-}

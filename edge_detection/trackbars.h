@@ -1,9 +1,10 @@
-#ifndef FUNC_H
-#define FUNC_H
+#ifndef TRACKBARS_H
+#define TRACKBARS_H
 
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
-#include "func.h"
+#include "utils.h"
+#include "images_processing.h"
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -40,24 +41,6 @@ struct HoughCirclesParams{
     vector<Vec3f> out_circles;
     string window_name;
 };
-
-struct Line{ // a line is represented by two points a and b
-    Point a, b;
-};
-
-int countLines(const string );
-map<string, double> loadParams(const string);
-vector<Point> PolarToCartesian(float, float);
-vector<Vec2f> CartesianToPolar(float x, float y);
-void DrawLines( Mat& , vector<Vec2f>);
-void DrawCircles(Mat& img, vector<Vec3f>circles);
-void DrawFilledCircles(Mat& img, vector<Vec3f>circles);
-
-void DrawInterceptionLines(Mat& img, vector<Vec2f>lines);
-bool Intersection(Point2f, Point2f, Point2f, Point2f, Point2f& );
-void road2Img_processing (Mat&, vector<Vec2f> );
-bool isIntersecting(Point& p1, Point& p2, Point& q1, Point& q2);
-
 
 static void on_trackbar_canny(int, void *p) {
     CannyParams* cparams = static_cast<CannyParams*> (p);
