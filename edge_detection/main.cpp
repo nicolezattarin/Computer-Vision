@@ -32,7 +32,7 @@ int main(int argc, char** argv)
      * *******************************************************/
 
     if (argc != 6){
-        cout << "Usage: " << argv[0] << " <image_name> <params file path> <tune canny> <tune HoughLines> <tune HoughCircles>" << endl;
+        cout << "Usage: " << argv[0] << " <image path> <params file path> <tune canny> <tune HoughLines> <tune HoughCircles>" << endl;
         return -1;}
     string pathImage = argv[1];
     // get filename
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 
     /**********************************************************
      *               HOUGH LINES DETECTION                    *
-     * *******************************************************/
+    **********************************************************/
 
     // Use the Edge Map as input for the standard Hough transform. 
     vector<Vec2f> lines; //Array of 2-elements vectors (ρ,θ)
@@ -169,14 +169,13 @@ int main(int argc, char** argv)
     
     /**********************************************************
     *               HOUGH CIRCLE DETECTION                   *
-    * *******************************************************/
+    * ********************************************************/
 
     vector<Vec3f> circles; //each element is a 3-element floating-point vector (x, y, radius)
     Mat circlesImg = filledLinesImg.clone(); //start from filled lines version
     namedWindow(WINDOW_FILLED_CIRCLES, WINDOW_AUTOSIZE);  
     medianBlur(greyImg, greyImg, 3);
     cout << "\nMedian Blur done" << endl;
-
 
     if (tuneHCircles == 1){
         imshow(WINDOW_FILLED_CIRCLES, circlesImg);
