@@ -9,6 +9,7 @@ histogram_equalization/results*
 # mac 
 *.DS_Store
 
+*main
 # Compiled Object files
 *.slo
 *.lo
