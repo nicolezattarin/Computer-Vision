@@ -76,22 +76,24 @@ Before developing complex models to detect objects and people within an image, o
 \end{abstract}
 \section{Setup and parameters tuning}
 
-
-At \href{https://github.com/nicolezattarin/Computer-Vision/tree/main/edge_detection}{this link} we provide a possible implementation of a program that, given an image, performs edge, lines and circles detection. The executable is structured in order to receive from command line a path to an image, a path to a file of parameters and three boolean variables, that allow the user to decide if he wants to tune the parameters by means of trackbars, i.e. :
+At \href{https://github.com/nicolezattarin/Computer-Vision/tree/main/edge_detection}{this link} we provide a possible implementation of a program that, given an image, performs edge, lines and circles detection. The executable is structured in order to receive from command line the following arguments:
+\begin{itemize}
+\item path to an image;
+\item path to a file of parameters;
+\item boolean variable to decide if tuning parameters or use those provided in the file;
+\item boolean variable that establish if tuned parameters must be saved in a \codeword{.txt} file.
+\end{itemize}
+In summary, to lunch the executable one should first compile and link the code with make and then run the program providing the desired variables, as follows:
 \begin{verbatim}
- ./main <image path> <params file path> <tune canny> <tune HoughLines> <tune HoughCircles>
-\end{verbatim}
-For instance, the following example launch the program in order to process the image \codeword{road2.png} getting initial parameters from the file \codeword{paramsRoad2.txt} and perform only the tuning of Canny parameters:
+make
+ ./main <image path> <params file path> <tune> <save> 
+ \end{verbatim}
+ When the tuning is performed the user can change in real time the values of the different parameters on the multiple windows that are displayed, in order to observe the impact of each parameter. Note that parameters change simultaneously on all the windows, so for instance if one changes the Canny threshold and then interacts with the trackbars of HoughLines, line detection is performed with the new Canny threshold.
+ 
+The idea is that we can get a good result by tuning different detectors and observe in real time how changes affect the result. Anyway, the suggested path is to first we Canny, see an example of interface in Figure \ref{fig:tuningedge} and only after that moving to HoughLines and HoughCircles. Trackbars are useful to see in real time how the output of a detector is affected by parameters change, for instance in Figure \ref{fig:tuningline} we can observe lines appearing and disappearing according to the angle range and to the threshold. At the end of this tuning process the chosen parameters are printed on the screen, and, if \codeword{save} is \codeword{true} these are saved in a \codeword{.txt} file. In this way we can run again the code to get only the final result with the parameters provided into the file anytime, note anyway that files may be overwritten. To summarize, the idea is to run:
 \begin{verbatim}
- ./main images/road2.png params/paramsRoad2.txt 1 0 0 
-\end{verbatim}
-Note that once a tuner flag is set to 1, the code runs up to that tuning phase with the parameters provided in the file. When the tuning window is closed, the execution stops as well.
-The idea is that we can get a good result by tuning a detector at a time, i.e. tune a detector for each run of the code,  and the process is made pretty efficient by the usage of trackbars. Therefore, first we tune Canny, see an example of interface in Figure \ref{fig:tuningedge}, and we write down the best set of parameters in the \codeword{.txt} file. Then, in two successive runs, we do the same with HoughLines and HoughCircles. Trackbars are useful to see in real time how the output of a detector is affected by parameters change, for instance in Figure \ref{fig:tuningline} we can observe lines appearing and disappearing according to the angle range and to the threshold. At the end of this tuning process the chosen parameters are printed on the screen, so that we can register them manually in the \codeword{.txt} file, in such a way that running the algorithm on the same image will return the desired result and save the corresponding images in a specific folder. To summarize, the workflow should look like:
-\begin{verbatim}
-./main images/road2.png params/paramsRoad2.txt 1 0 0 // manually tune params, update params file
-./main images/road2.png params/paramsRoad2.txt 0 1 0 // manually tune  params, update params file
-./main images/road2.png params/paramsRoad2.txt 0 0 1 // manually tune params, update params file
-./main images/road2.png params/paramsRoad2.txt 0 0 0 // get all final results!
+./main images/road2.png params/params_road2.txt 1 1 // manually tune params, save into file
+./main images/road2.png params/params_road2.txt 0 0  // Get final result!
 \end{verbatim}
 
 Trackbars callbacks are collected in \codeword{trackbars.h}, while \codeword{utils.h} contains all the functions that can be useful to manipulate images, lines, circles and draw on the image itself.
@@ -99,24 +101,24 @@ Finally, note that each of the image requires a specific tuning and a specific p
 
 \begin{figure} \centering
 \begin{subfigure}{0.5\textwidth}
-  \includegraphics[width=\textwidth]{../results/tuningEdge.png}
+  \includegraphics[width=\textwidth]{figs/tuningEdge.png}
 \caption{ Example of interface for Canny parameters tuning, i.e. lower and higher thresholds.}\label{fig:tuningedge}
 \end{subfigure} \quad
 \begin{subfigure}{0.46\textwidth}
-\includegraphics[width=\textwidth]{../results/tuningLines.png}
+\includegraphics[width=\textwidth]{figs/tuningLines.png}
 \caption{Example of interface for HoughLines parameters tuning, i.e. threshold and angle range.}\label{fig:tuningline}
 \end{subfigure}\caption{Example of interface for a run in which we ask to tune the Canny parameters (a) and the HoughLines (b). Note that parameters are set randomly in this example, just to show that the image changes according to values inserted through the trackbar. }\label{fig:tuning}
 \end{figure}
 
 
 \section{Results}
-We test edges, lines and circles detection of three images provided in the folder \codeword{images}, in particular \codeword{road2.png},  \codeword{road3.jpg} and \codeword{road4.jpg}.
+We test edges, lines and circles detection of three images provided in the folder \codeword{images}, in particular \codeword{road2.png},  \codeword{road3.png} and \codeword{road4.png}.
 The initial part of the processing is the same for all the images and consists of the following steps:
 \begin{enumerate}
 \item Load image and parameters, show the original image;
 \item Apply Canny to the greyscale image, tune the parameters and save the edge map. This is quite a delicate point, since the output of Canny is fundamental to individuate lines in the next step. Indeed, we are interested in detecting edges which correspond to street lines, but we can also allow the detection of the edges of leaves and other minor objects, since these won't be identified as lines by HoughLines. The thresholds should then be fixed in order to make it possible for HoughLines to detect the desired lines, but we still have a tolerance due to the fact that many edges won't affect our final result. 
 \item Use the output of Canny, i.e. the edge map, to individuate lines within the image by means of HoughLines. We tune the parameters in order to individuate only the boundaries of the street or of the street lane, this can be done fixing a proper range  for $\theta$ and the threshold: the lower the threshold, the more lines we detect. Moreover, once the parameters are fixed, we fill the polygon which is identified by the lower (i.e. points with larger $y$ in the openCV system) points of two intersecting lines and the intersection point,
-\item  Apply HoughCircles the greyscale image in order to individuate circles, with particular attention to the most relevant parameters in order to detect only round street signs. In this case the most important parameters to consider are the range of the radius, which allows to fix the size of the circles we want to detect, and the thresholds, which are used inside of HoughCircles to perform edge detection. Finally we fill circles with the same color.
+\item  Apply HoughCircles to the blurred greyscale image in order to individuate circles, with particular attention to tuning in order to detect only round street signs. In this case the most important parameters to consider are the range of the radius, which allows to fix the size of the circles we want to detect, and the thresholds, which are used inside of HoughCircles to perform edge detection. Finally we fill circles with the same color.
 \end{enumerate}
 
 In particular, parameters to process image \codeword{road2.png} are shown in Table \ref{tab:r2}, while in Figure \ref{fig:road2} we provide three different steps of the image manipulation: original image in Figure \ref{fig:r2fig}, edge map in Figure \ref{fig:r2edges} and the final result in \ref{fig:r2circles}. Note that in the final result we show only the relevant lines and we fill in between only up to the intersection point. This processing is designed specifically for this image and it is performed in \codeword{void road2Img_processing (Mat&, vector<Vec2f>)}, in which we also fix a condition of the coordinates of the intersection for plotting the lines in order to eliminate lines which have an intersection outside of the image.
@@ -156,20 +158,20 @@ In particular, parameters to process image \codeword{road2.png} are shown in Tab
 
 \begin{figure} \centering
 \begin{subfigure}{0.8\textwidth}
-  \includegraphics[width=\textwidth]{../images/road2.png}
+  \includegraphics[width=\textwidth]{figs/road2.png}
 \caption{Original image }\label{fig:r2fig}
 \end{subfigure} \\
 \begin{subfigure}{0.8\textwidth}
-\includegraphics[width=\textwidth]{../results/edgeMap_road2.png}
+\includegraphics[width=\textwidth]{figs/edgeMap_road2.png}
 \caption{Edge map after applying Canny to the greyscale image}\label{fig:r2edges}
 \end{subfigure}
   \begin{subfigure}{0.8\textwidth}
-\includegraphics[width=\textwidth]{../results/Circles_road2.png}
+\includegraphics[width=\textwidth]{figs/Circles_road2.png}
 \caption{Final result: circle street signs are filled in green, while the area between the intersected lines is filled in magenta}\label{fig:r2circles}
 \end{subfigure}\caption{Three different steps of the image manipulation: original image in Figure \ref{fig:r2fig}, edge map in Figure \ref{fig:r2edges} and the final result in \ref{fig:r2circles}. }\label{fig:road2}
 \end{figure}
 
-For what concerns image \codeword{road3.jpg}, parameters are shown in Table \ref{tab:r3}, while images in Figure \ref{fig:road3}, in this image we detect the main lines that delimit the road and two circles. Note that the parameters for HoughLines are similar to the same fixed for the previous image, while Canny thresholds are pretty different. This is due to the  fact that each image requires a specific tuning, both because of the intensity distribution of the image itself and on the objects inside the image. Also in this case we perform a specific processing in \codeword{void road3Img_processing (Mat&, vector<Vec2f>)}.
+For what concerns image \codeword{road3.png}, parameters are shown in Table \ref{tab:r3}, while images in Figure \ref{fig:road3}, in this image we detect the main lines that delimit the road and two circles. Note that the parameters for HoughLines are similar to the same fixed for the previous image, while Canny thresholds are pretty different. This is due to the  fact that each image requires a specific tuning, both because of the intensity distribution of the image itself and on the objects inside the image. Also in this case we perform a specific processing in \codeword{void road3Img_processing (Mat&, vector<Vec2f>)}.
 
 %ROAD3
 \begin{table}\centering
@@ -201,26 +203,26 @@ For what concerns image \codeword{road3.jpg}, parameters are shown in Table \ref
       & minRadius& 0 \\ 
    & maxRadius & 32 \\ \hline
   \end{tabular}
-  \caption{Parameters set for road3.jpg image, for all the three algorithms.} \label{tab:r3}
+  \caption{Parameters set for road3.png image, for all the three algorithms.} \label{tab:r3}
   \end{table}
 
   
 \begin{figure} \centering
 \begin{subfigure}{0.45\textwidth}
-  \includegraphics[width=\textwidth]{../images/road3.jpg}
+  \includegraphics[width=\textwidth]{figs/road3.jpg}
 \caption{ Original image}\label{fig:r3fig}
 \end{subfigure} \quad
 \begin{subfigure}{0.45\textwidth}
-\includegraphics[width=\textwidth]{../results/edgeMap_road3.jpg}
+\includegraphics[width=\textwidth]{figs/edgeMap_road3.png}
 \caption{Edge map after applying Canny to the greyscale image}\label{fig:r3edges}
 \end{subfigure}\\
   \begin{subfigure}{0.6\textwidth}
-\includegraphics[width=\textwidth]{../results/Circles_road3.jpg}
+\includegraphics[width=\textwidth]{figs/Circles_road3.png}
 \caption{Final result: circle street signs are filled in green, while the area between the intersected lines is filled in magenta }\label{fig:r3circles}
 \end{subfigure}\caption{Three different steps of the image manipulation: original image in Figure \ref{fig:r3fig}, edge map in Figure \ref{fig:r3edges} and the final result in \ref{fig:r3circles}.}\label{fig:road3}
 \end{figure}
 
-Results for \codeword{road4.jpg} are shown in Table \ref{tab:r4} and Figure \ref{fig:road4}, in this case we identify both the limiting line of the road and two lines inside of the street itself. We then fill the two roadways with different colors, in order to highlight the line in the middle, moreover we detect circles corresponding to signals.
+Results for \codeword{road4.png} are shown in Table \ref{tab:r4} and Figure \ref{fig:road4}, in this case we identify both the limiting line of the road and two lines inside of the street itself. We then fill the two roadways with different colors, in order to highlight the line in the middle, moreover we detect circles corresponding to signals.
 
 %ROAD4
 \begin{table}\centering
@@ -252,21 +254,21 @@ Results for \codeword{road4.jpg} are shown in Table \ref{tab:r4} and Figure \ref
       & minRadius& 0 \\ 
    & maxRadius & 14 \\ \hline
   \end{tabular}
-  \caption{Parameters set for road4.jpg image, for all the three algorithms.} \label{tab:r4}
+  \caption{Parameters set for road4.png image, for all the three algorithms.} \label{tab:r4}
   \end{table}
 
 
 \begin{figure} \centering
 \begin{subfigure}{0.45\textwidth}
-  \includegraphics[width=\textwidth]{../images/road4.jpg}
+  \includegraphics[width=\textwidth]{figs/road4.jpg}
 \caption{Original image }\label{fig:r4fig}
 \end{subfigure} \quad
 \begin{subfigure}{0.45\textwidth}
-\includegraphics[width=\textwidth]{../results/edgeMap_road4.jpg}
+\includegraphics[width=\textwidth]{figs/edgeMap_road4.png}
 \caption{Edge map after applying Canny to the greyscale image}\label{fig:r4edges}
 \end{subfigure}\\
   \begin{subfigure}{0.6\textwidth}
-\includegraphics[width=\textwidth]{../results/Circles_road4.jpg}
+\includegraphics[width=\textwidth]{figs/Circles_road4.png}
 \caption{Final result: circle street signs are filled in green, while the area between the intersected lines is filled in magenta and blue. Note that in this case we fill differently the two different areas in order to highlight the line in the middle.}\label{fig:r4circles}
 \end{subfigure}\caption{Three different steps of the image manipulation: original image in Figure \ref{fig:r4fig}, edge map in Figure \ref{fig:r4edges} and the final result in \ref{fig:r4circles}. }\label{fig:road4}
 \end{figure}
