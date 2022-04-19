@@ -22,7 +22,8 @@ string WINDOW_EDGES = "Edge Map";
 string WINDOW_ORIGINAL = "Original image";
 string WINDOW_LINES = "Line detection";
 string WINDOW_FILLED_LINES = "Filled line detection";
-string WINDOW_FILLED_CIRCLES = "Filled lines-circles detection";
+string WINDOW_CIRCLES = "Circles detection";
+
 
 
 int main(int argc, char** argv)
@@ -31,23 +32,23 @@ int main(int argc, char** argv)
      *              LOADING PARAMETERS FROM FILE              *
      * *******************************************************/
 
-    if (argc != 6){
-        cout << "Usage: " << argv[0] << " <image path> <params file path> <tune canny> <tune HoughLines> <tune HoughCircles>" << endl;
+    if (argc != 5){
+        cout << "Usage: " << argv[0] << " <image path> <params file path> <tune> <save>" << endl;
+        cout << "Warning: if save is 1, any existing file will be overwritten" << endl;
         return -1;}
     string pathImage = argv[1];
     // get filename
     string dir = "images/";
     size_t pos = pathImage.find("images/")+dir.length();;      
     string fileName = pathImage.substr (pos);
+    size_t lastindex = fileName.find_last_of("."); 
+    fileName = fileName.substr(0, lastindex); 
+    bool tune = atoi(argv[3]);
+    bool save = atoi(argv[4]);
 
     //get other cl args 
     string pathParams = argv[2];
-    bool tuneCanny = atoi(argv[3]);
-    bool tuneHLines = atoi(argv[4]);
-    bool tuneHCircles = atoi(argv[5]);
     cout << "Image path: " << pathImage << endl;
-    cout << "tune Canny: " << tuneCanny << endl;
-    cout << "tune HoughLines: " << tuneHLines << endl;
 
     // load parameters from file
     //check if file exists
@@ -73,78 +74,159 @@ int main(int argc, char** argv)
     namedWindow(WINDOW_ORIGINAL, WINDOW_AUTOSIZE);   
     imshow(WINDOW_ORIGINAL, img);
 
-    /**********************************************************
-                    EDGE DETECTION 
-    ***********************************************************/
-    // Generate the edge map with the Canny algorithm. 
-    Mat edgeMap;
-    namedWindow(WINDOW_EDGES, WINDOW_AUTOSIZE);  
-    // work on the grey scale image
+    // IMAGE DECLARATION AND OUT LINES/CIRECLES
+    // work on the grey scale image for canny
     Mat greyImg;
     cvtColor(img, greyImg, COLOR_BGR2GRAY);
+    Mat edgeMap;
+    //lines
+    Mat LinesImg = img.clone();
+    Mat filledLinesImg = img.clone();
+    vector<Vec2f> lines; //Array of 2-elements vectors (ρ,θ)
+    //circles
+    Mat greyImgBlur;
+    vector<Vec3f> circles; //each element is a 3-element floating-point vector (x, y, radius)
+    medianBlur(greyImg, greyImgBlur, 3);
+    Mat circlesImg = img.clone();
+    cout << "\nMedian Blur done" << endl;
 
-    // if we tune the parameters we only work on that, 
-    // to perform all the steps set the tuning flags to false
-    if (tuneCanny == 1){
-        // setup params
+    if (tune){
+        /**********************************************************
+         *                      parameters                        *
+         * *******************************************************/
+
         CannyParams cParams = {static_cast<int>(params["lowThreshold_canny"]), 
                                 static_cast<int>(params["highThreshold_canny"]), 
                                 static_cast<int>(params["sigma_canny"]), 
                                 greyImg, 
                                 edgeMap, 
                                 WINDOW_EDGES};
+        HoughLinesParams hlParams = {static_cast<int>(params["threshold_HoughLines"]), 
+                                static_cast<int>(params["minTheta_HoughLines"]), 
+                                static_cast<int>(params["maxTheta_HoughLines"]), 
+                                edgeMap,
+                                LinesImg,
+                                lines, 
+                                WINDOW_LINES};
 
+        HoughCirclesParams hcParams = {static_cast<int>(params["highThreshold_HoughCircles"]), 
+                                    static_cast<int>(params["centerThreshold_HoughCircles"]), 
+                                    static_cast<int>(params["minDist_HoughCircles"]),
+                                    static_cast<int>(params["minRad_HoughCircles"]), 
+                                    static_cast<int>(params["maxRad_HoughCircles"]), 
+                                    greyImgBlur,
+                                    circlesImg, 
+                                    circles,
+                                    WINDOW_CIRCLES};
+        params_trackbar pTrackbar = {cParams, hlParams, hcParams};
+
+        /**********************************************************
+                        EDGE DETECTION 
+        ***********************************************************/
+        // Generate the edge map with the Canny algorithm. 
+        namedWindow(WINDOW_EDGES, WINDOW_AUTOSIZE);  
         imshow(WINDOW_EDGES, greyImg);
+
         cout << "\nWarning: you can tune the lower and higher thresholds with the trackbars" << endl;
         cout << "While the sigma is fixed in the file, sigma must be between 3 and 7" << endl;
         createTrackbar("lowThreshold", WINDOW_EDGES, 
-                        &(cParams.lowThreshold), 500, on_trackbar_canny, (void*)&cParams);
+                        &(pTrackbar.canny_params.lowThreshold), 500, on_trackbar_canny, (void*)&pTrackbar);
         createTrackbar("highThreshold", WINDOW_EDGES, 
-                        &(cParams.highThreshold), 800, on_trackbar_canny, (void*)&cParams);
+                        &(pTrackbar.canny_params.highThreshold), 800, on_trackbar_canny, (void*)&pTrackbar);
+
+        /**********************************************************
+         *               HOUGH LINES DETECTION                    *
+        **********************************************************/
+
+        // Use the Edge Map as input for the standard Hough transform. 
+        namedWindow(WINDOW_LINES, WINDOW_AUTOSIZE);  
+        imshow( WINDOW_LINES, LinesImg);
+
+        cout << "\nWarning: you can tune the threshold, minimum and maximum angle" << endl;
+        cout << "While the discretization of the grid is fixed by a global variable" << endl;
+        createTrackbar("threshold", WINDOW_LINES, 
+                        &(pTrackbar.hough_lines_params.threshold), 700, on_trackbar_HLines, (void*)&pTrackbar);
+        createTrackbar("minTheta", WINDOW_LINES, 
+                        &(pTrackbar.hough_lines_params.minTheta), 4, on_trackbar_HLines, (void*)&pTrackbar);
+        createTrackbar("maxTheta", WINDOW_LINES, 
+                        &(pTrackbar.hough_lines_params.maxTheta), 4, on_trackbar_HLines, (void*)&pTrackbar);
+
+
+        /**********************************************************
+         *              HOUGH CIRCLES DETECTION                  *
+         * *******************************************************/
+        namedWindow(WINDOW_CIRCLES, WINDOW_AUTOSIZE);
+        imshow(WINDOW_CIRCLES, circlesImg);
+        createTrackbar("high threshold", WINDOW_CIRCLES, 
+                        &(pTrackbar.hough_circles_params.highThreshold), 800, on_trackbar_HCircles, (void*)&pTrackbar);
+        createTrackbar("center threshold", WINDOW_CIRCLES, 
+                        &(pTrackbar.hough_circles_params.centerThreshold), 200, on_trackbar_HCircles, (void*)&pTrackbar);
+        createTrackbar("min distance", WINDOW_CIRCLES, 
+                        &(pTrackbar.hough_circles_params.minDistance), 10, on_trackbar_HCircles, (void*)&pTrackbar);
+        createTrackbar("min radius", WINDOW_CIRCLES, 
+                        &(pTrackbar.hough_circles_params.minRadius), 10, on_trackbar_HCircles, (void*)&pTrackbar);
+        createTrackbar("max radius", WINDOW_CIRCLES, 
+                        &(pTrackbar.hough_circles_params.maxRadius), 100, on_trackbar_HCircles, (void*)&pTrackbar);
+
         waitKey(0);
-        return 0;
-    } 
-    else {
+
+        /**********************************************************
+         *              SPECIFIC PROCESSING                       *
+         * *******************************************************/
+        lines = pTrackbar.hough_lines_params.out_lines;
+
+        if (fileName == "road2"){road2Img_processing (filledLinesImg, lines);}
+        else if (fileName == "road4"){road4Img_processing (filledLinesImg, lines);}
+        else if (fileName == "road3"){road3Img_processing (filledLinesImg, lines);}
+
+
+        // save the image
+        DrawInterceptionLines(LinesImg, lines);
+        edgeMap = pTrackbar.canny_params.out_image.clone();
+        imwrite("results/Lines_"+fileName+".png", LinesImg);
+        imwrite("results/edgeMap_"+fileName+".png", edgeMap);
+        imwrite("results/FilldLines_"+fileName+".png", filledLinesImg);
+        circlesImg = pTrackbar.hough_circles_params.out_image.clone();
+        circles = pTrackbar.hough_circles_params.out_circles;
+        DrawFilledCircles(filledLinesImg, circles);
+        imwrite("results/Circles_"+fileName+".png", filledLinesImg);
+
+        // save parameters
+        if (save){
+            cout << "Warning: saving parameters:" << endl;
+            fstream file;
+            file.open("params/params_"+fileName+".txt", ios::out);
+            file << "sigma_canny " << pTrackbar.canny_params.sigma << endl;
+            file << "lowThreshold_canny " << pTrackbar.canny_params.lowThreshold << endl;
+            file << "highThreshold_canny " << pTrackbar.canny_params.highThreshold << endl;
+            file << "rho_HoughLines " << 1 << endl;
+            file << "theta_HoughLines " << 0.05 << endl;
+            file << "threshold_HoughLines " << pTrackbar.hough_lines_params.threshold << endl;
+            file << "minTheta_HoughLines " << pTrackbar.hough_lines_params.minTheta << endl;
+            file << "maxTheta_HoughLines " << pTrackbar.hough_lines_params.maxTheta << endl;
+            file << "highThreshold_HoughCircles " << pTrackbar.hough_circles_params.highThreshold << endl;
+            file << "centerThreshold_HoughCircles " << pTrackbar.hough_circles_params.centerThreshold << endl;
+            file << "minDist_HoughCircles " << pTrackbar.hough_circles_params.minDistance << endl;
+            file << "minRad_HoughCircles " << pTrackbar.hough_circles_params.minRadius << endl;
+            file << "maxRad_HoughCircles " << pTrackbar.hough_circles_params.maxRadius << endl;
+            file.close();
+        }
+    }
+    else{
+        /**********************************************************
+         *                         Canny                          *
+         * *******************************************************/
         Canny(greyImg, 
             edgeMap, 
             static_cast<int>(params["lowThreshold_canny"]), 
             static_cast<int>(params["highThreshold_canny"]), 
             static_cast<int>(params["sigma_canny"]));
         imshow(WINDOW_EDGES, edgeMap);
-        imwrite("results/edgeMap_"+fileName, edgeMap);
-    }
+        imwrite("results/edgeMap_"+fileName+".png", edgeMap);
 
-    /**********************************************************
-     *               HOUGH LINES DETECTION                    *
-    **********************************************************/
-
-    // Use the Edge Map as input for the standard Hough transform. 
-    vector<Vec2f> lines; //Array of 2-elements vectors (ρ,θ)
-    Mat LinesImg = img.clone();
-    Mat filledLinesImg = img.clone();
-    namedWindow(WINDOW_LINES, WINDOW_AUTOSIZE);  
-
-    if (tuneHLines == 1){
-        imshow( WINDOW_LINES, LinesImg);
-        HoughLinesParams hlParams = {static_cast<int>(params["threshold_HoughLines"]), 
-                                 static_cast<int>(params["minTheta_HoughLines"]), 
-                                 static_cast<int>(params["maxTheta_HoughLines"]), 
-                                 edgeMap,
-                                 LinesImg,
-                                 lines, 
-                                 WINDOW_LINES};
-        cout << "\nWarning: you can tune the threshold, minimum and maximum angle" << endl;
-        cout << "While the discretization of the grid is fixed by a global variable" << endl;
-        createTrackbar("threshold", WINDOW_LINES, 
-                        &(hlParams.threshold), 700, on_trackbar_HLines, (void*)&hlParams);
-        createTrackbar("minTheta", WINDOW_LINES, 
-                        &(hlParams.minTheta), 4, on_trackbar_HLines, (void*)&hlParams);
-        createTrackbar("maxTheta", WINDOW_LINES, 
-                        &(hlParams.maxTheta), 4, on_trackbar_HLines, (void*)&hlParams);
-        waitKey(0);
-        return 0;
-      }
-    else{
+        /**********************************************************
+         *                         HoughLines                     *
+         * *******************************************************/
         HoughLines(edgeMap, lines, 
                         RHO_CELL_SIZE, 
                         THETA_CELL_SIZE, 
@@ -155,56 +237,22 @@ int main(int argc, char** argv)
         
         DrawInterceptionLines(LinesImg, lines);
         imshow(WINDOW_LINES,LinesImg);
-        imwrite("results/Lines_"+fileName, LinesImg);
+        imwrite("results/Lines_"+fileName+".png", LinesImg);
 
         // SPECIFIC PROCESSING FOR EACH IMAGE
-        if (fileName == "road2.png"){road2Img_processing (filledLinesImg, lines);}
-        else if (fileName == "road4.jpg"){road4Img_processing (filledLinesImg, lines);}
-        else if (fileName == "road3.jpg"){road3Img_processing (filledLinesImg, lines);}
+        if (fileName == "road2"){road2Img_processing (filledLinesImg, lines);}
+        else if (fileName == "road4"){road4Img_processing (filledLinesImg, lines);}
+        else if (fileName == "road3"){road3Img_processing (filledLinesImg, lines);}
 
         namedWindow(WINDOW_FILLED_LINES, WINDOW_AUTOSIZE);  
         imshow(WINDOW_FILLED_LINES, filledLinesImg);
-        imwrite("results/FilldEdgeMap_"+fileName, filledLinesImg);
-    }
-    
-    /**********************************************************
-    *               HOUGH CIRCLE DETECTION                   *
-    * ********************************************************/
+        imwrite("results/FilldLines_"+fileName+".png", filledLinesImg);
 
-    vector<Vec3f> circles; //each element is a 3-element floating-point vector (x, y, radius)
-    Mat circlesImg = filledLinesImg.clone(); //start from filled lines version
-    namedWindow(WINDOW_FILLED_CIRCLES, WINDOW_AUTOSIZE);  
-    medianBlur(greyImg, greyImg, 3);
-    cout << "\nMedian Blur done" << endl;
-
-    if (tuneHCircles == 1){
-        imshow(WINDOW_FILLED_CIRCLES, circlesImg);
-        HoughCirclesParams hcParams = {static_cast<int>(params["highThreshold_HoughCircles"]), 
-                                 static_cast<int>(params["centerThreshold_HoughCircles"]), 
-                                 static_cast<int>(params["minDist_HoughCircles"]),
-                                 static_cast<int>(params["minRad_HoughCircles"]), 
-                                 static_cast<int>(params["maxRad_HoughCircles"]), 
-                                 greyImg,
-                                 circlesImg, 
-                                 circles,
-                                 WINDOW_FILLED_CIRCLES};
-        createTrackbar("high threshold", WINDOW_FILLED_CIRCLES, 
-                        &(hcParams.highThreshold), 800, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("center threshold", WINDOW_FILLED_CIRCLES, 
-                        &(hcParams.centerThreshold), 200, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("min distance", WINDOW_FILLED_CIRCLES, 
-                        &(hcParams.minDistance), 10, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("min radius", WINDOW_FILLED_CIRCLES, 
-                        &(hcParams.minRadius), 10, on_trackbar_HCircles, (void*)&hcParams);
-        createTrackbar("max radius", WINDOW_FILLED_CIRCLES, 
-                        &(hcParams.maxRadius), 100, on_trackbar_HCircles, (void*)&hcParams);
-
-        waitKey(0);
-        return 0;
-      }
-    else{
+        /**********************************************************
+         *              HOUGH CIRCLES DETECTION                  *
+         * *******************************************************/
         // work on the grey scale image
-        HoughCircles(greyImg, circles, HOUGH_GRADIENT, 
+        HoughCircles(greyImgBlur, circles, HOUGH_GRADIENT, 
                         1, //1 = dp = 1
                         (params["minDist_HoughCircles"]), 
                         (params["highThreshold_HoughCircles"]), 
@@ -212,10 +260,10 @@ int main(int argc, char** argv)
                         (params["minRad_HoughCircles"]), 
                         (params["maxRad_HoughCircles"]));
         cout << "\n\n" << circles.size() << " circles detected" << endl;
-        DrawFilledCircles(circlesImg, circles);
-        imshow(WINDOW_FILLED_CIRCLES, circlesImg);
-        imwrite("results/Circles_"+fileName, circlesImg);
+        DrawFilledCircles(filledLinesImg, circles);
+        imshow(WINDOW_CIRCLES, filledLinesImg);
+        imwrite("results/Circles_"+fileName+".png", filledLinesImg);
     }
-    waitKey(0);
+
     return 0;
 }

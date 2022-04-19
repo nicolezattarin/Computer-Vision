@@ -42,22 +42,41 @@ struct HoughCirclesParams{
     string window_name;
 };
 
+struct params_trackbar {
+    CannyParams canny_params;
+    HoughLinesParams hough_lines_params;
+    HoughCirclesParams hough_circles_params;
+};
+
 static void on_trackbar_canny(int, void *p) {
-    CannyParams* cparams = static_cast<CannyParams*> (p);
+    params_trackbar *params = (params_trackbar *)p;
+    CannyParams* cparams = &params->canny_params;
+    HoughLinesParams *hparams = &params->hough_lines_params;
+
     Canny(cparams->in_image, 
         cparams->out_image, 
         cparams->lowThreshold, 
         cparams->highThreshold, 
         cparams->sigma);
+
     cout << "\nCanny params: "  << endl;
     cout << "lowThreshold: " << cparams->lowThreshold << endl;
     cout << "highThreshold: " << cparams->highThreshold << endl;
     cout << "sigma: " << cparams->sigma << endl;
+
+    cout << "\nHoughLines params: " << endl;
+    cout << "threshold: " << hparams->threshold << endl;
+    cout << "minTheta: " << hparams->minTheta << endl;
+    cout << "maxTheta: " << hparams->maxTheta << endl;
+
     imshow(cparams->window_name, cparams->out_image);    
 }
 
 static void on_trackbar_HLines(int, void *p){
-    HoughLinesParams *hparams = static_cast<HoughLinesParams*> (p);
+    params_trackbar *params = (params_trackbar *)p;
+    CannyParams* cparams = &params->canny_params;
+    HoughLinesParams *hparams = &params->hough_lines_params;   
+    hparams->in_image = cparams->out_image;
     double rho = 1;
     double theta = CV_PI/180;
     Mat oldOutimg = hparams->out_image.clone();
@@ -67,17 +86,26 @@ static void on_trackbar_HLines(int, void *p){
                 hparams->threshold, 0, 0, 
                 hparams->minTheta,
                 hparams->maxTheta);
+
+    cout << "\nCanny params: "  << endl;
+    cout << "lowThreshold: " << cparams->lowThreshold << endl;
+    cout << "highThreshold: " << cparams->highThreshold << endl;
+    cout << "sigma: " << cparams->sigma << endl;
+
     cout << "\nHoughLines params: " << endl;
     cout << "threshold: " << hparams->threshold << endl;
     cout << "minTheta: " << hparams->minTheta << endl;
     cout << "maxTheta: " << hparams->maxTheta << endl;
+
     DrawLines(hparams->out_image, hparams->out_lines);
     imshow(hparams->window_name, hparams->out_image);  
     hparams->out_image = oldOutimg;
 }
 
 static void on_trackbar_HCircles(int, void *p){
-    HoughCirclesParams *hparams = static_cast<HoughCirclesParams*> (p);
+    params_trackbar *params = (params_trackbar *)p;
+    HoughCirclesParams *hparams = &params->hough_circles_params;
+
     string window_name;
     Mat oldOutimg = hparams->out_image.clone();
     HoughCircles(hparams->in_image, hparams->out_circles, 
@@ -94,6 +122,7 @@ static void on_trackbar_HCircles(int, void *p){
     cout << "minDistance: " << hparams->minDistance << endl;
     cout << "minRadius: " << hparams->minRadius << endl;
     cout << "maxRadius: " << hparams->maxRadius << endl;
+    
     DrawCircles(hparams->out_image, hparams->out_circles);
     imshow(hparams->window_name, hparams->out_image); 
     hparams->out_image = oldOutimg;
