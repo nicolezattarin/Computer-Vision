@@ -21,6 +21,9 @@
         "__tree": "cpp",
         "filesystem": "cpp",
         "map": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "*.tcc": "cpp"
     }
 }
