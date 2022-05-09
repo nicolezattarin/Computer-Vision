@@ -3,19 +3,42 @@
 Mosaicing :: Mosaicing(string dir){
     m_dir = dir;
     m_num_images = 0;
+    //load paths to images
     for (const auto & entry : fs::directory_iterator(dir)){
         string extension = entry.path().u8string().substr(entry.path().u8string().find_last_of(".") + 1);
         if (extension == "jpg" || extension == "png" || extension == "jpeg"){
             m_images_paths.push_back(entry.path());
             m_num_images ++;
-            m_images.push_back(imread(entry.path()));
-            if (m_images.back().empty()){
-                cerr << "Error: image " << entry.path() << " not found" << endl;
-                m_num_images --;
-            }
         }
     }
+    if (!checkperfectsquare(m_num_images)){
+        cout << "Error: number of images is not a perfect square" << endl;
+        exit(1);
+    }
     m_grid_size = sqrt(m_num_images);
+
+    //read images and store them in the right order
+    m_images = vector<Mat>(m_num_images);
+    for (int n = 0; n < m_images_paths.size(); n++){
+        // read the index of the image
+        string path = m_images_paths[n];
+        int index_point = path.find_last_of(".");
+
+        //index in a grid
+        int i = stoi(path.substr(index_point-2,1));
+        int j = stoi(path.substr(index_point-1,1));
+        //insert the list
+        int k = i*m_grid_size + j;
+        //DEBUG
+        // cout << "Loading image " << k << ": " << path << endl;
+        // cout << "Index: " << i << " " << j << endl;
+
+        m_images[k]=imread(path);
+        if (m_images[k].empty()){
+            cerr << "Error: image " << path << " not found" << endl;
+            exit(1);
+        }
+    }
 
     // find pairs of images to be matched
     for (int n = 0; n < m_num_images-1; n++){
@@ -186,5 +209,36 @@ void Mosaicing :: RefineMatching(float threshold){
     cout << "Matching refined\n" <<endl;
 }
 
-    
+void Mosaicing :: AffineTransform(float threshold){
+    cout << "\nAffine transform" << endl;
+    if (!m_refined_matching){
+        cerr << "Error: refined matching not performed, perform refined matching before affine transform" << endl;
+        return;
+    }
+    // for each pair compute the affine transform
+    for (int n = 0; n < m_pairs.size(); n++){
+        vector<int> pair = m_pairs[n];
+        vector<DMatch> match = m_refined_matches.at(pair);
+        vector<KeyPoint> kp1 = m_keypoints[pair[0]];
+        vector<KeyPoint> kp2 = m_keypoints[pair[1]];
+
+        vector<Point2f> src_pts;
+        vector<Point2f> dst_pts;
+        for (int j=0; j < match.size(); ++j) {
+            Point2f src_pt = kp1[match[j].queryIdx].pt;
+            Point2f dst_pt = kp2[match[j].trainIdx].pt;
+            src_pts.push_back(src_pt);
+            dst_pts.push_back(dst_pt);
+      
+            //DEBUG print 
+            cout << "(" << pair[0] << ", " << pair[1] << ") " << j << ": " 
+                << "src_pt: " << src_pt << " dst_pt: " << dst_pt << endl;
+        }
+       
+        Mat affine_transform;
+        // findHomography(src_pts, dst_pts, affine_transform, RANSAC, threshold);
+        m_affine_transforms.insert({pair, affine_transform});
+    }
+}
+
 	

@@ -12,6 +12,7 @@
 #include <chrono>
 #include "func.h"
 
+
 using namespace std;
 using namespace cv;
 namespace fs = std::__fs::filesystem;
@@ -36,8 +37,8 @@ class Mosaicing{
         void SIFTdetection(int nfeatures = 100);
         void ORBdetection();
         void Matching();
-
         void RefineMatching(float threshold = 3);
+        void AffineTransform(float threshold);
 
     private:
         string m_dir;
@@ -50,6 +51,7 @@ class Mosaicing{
         map<vector<int>, vector<DMatch>> m_matches; // matches for each image, map with pair (i,j) and vector of matches
         map<vector<int>, vector<DMatch>> m_refined_matches;
         vector<vector<int>> m_pairs; // pairs of images to be matched
+        map<vector<int>, Mat> m_affine_transforms; // affine transforms for each image, map with pair (i,j) and affine transform
         bool m_sift;
         bool m_orb;
         bool m_matching;
