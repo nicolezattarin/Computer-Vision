@@ -37,7 +37,7 @@ class Mosaicing{
         void SIFTdetection(int nfeatures = 100);
         void ORBdetection();
         void Matching();
-        void RefineMatching(float threshold = 3);
+        void RefineMatching(float threshold = 0.8);
         void AffineTransform(float threshold);
 
     private:

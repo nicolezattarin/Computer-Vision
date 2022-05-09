@@ -24,6 +24,7 @@
         "chrono": "cpp",
         "tuple": "cpp",
         "type_traits": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "algorithm": "cpp"
     }
 }

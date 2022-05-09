@@ -129,13 +129,14 @@ void Mosaicing :: SIFTdetection(int nfeatures){
 
 void Mosaicing :: ORBdetection(){
     cout << "\nORB detection" << endl;
-    vector<KeyPoint> KPTemp;
-    Mat descriptorTemp;
     for (int i = 0; i < m_num_images; i++) {
         cout << "Detecting keypoints for image " << i << " of size " << m_images[i].size() << endl;
         // orb
+        vector<KeyPoint> KPTemp;
+        Mat descriptorTemp;
         Ptr<ORB> detector = ORB::create();
-        detector->detectAndCompute(m_images[i], Mat(), KPTemp, descriptorTemp);
+        detector->detect(m_images[i], KPTemp);
+        detector->compute(m_images[i], KPTemp, descriptorTemp);
         m_keypoints.push_back(KPTemp);
         m_descriptors.push_back(descriptorTemp);
         KPTemp.clear();
@@ -168,6 +169,7 @@ void Mosaicing :: Matching(){
         matcher = BFMatcher(NORM_HAMMING);
     }
     for (int n = 0; n < m_pairs.size(); n++){
+        BFMatcher matcher(NORM_HAMMING);
         vector<DMatch> matches;
         vector<int> pair = m_pairs[n];
         matcher.match(m_descriptors[pair[0]], m_descriptors[pair[1]], matches);
@@ -176,15 +178,16 @@ void Mosaicing :: Matching(){
         cout << "Matching (" << pair[0] << ", " << pair[1] << ") matchsize: " << m_matches.at(pair).size() << endl;
     }
     // DEBUG print matches
-    // for (int n = 0; n < m_pairs.size(); n++){
-    //     vector<int> pair = m_pairs[n];
-    //     cout << "distance between (" << pair[0] << ", " << pair[1] << ") is: " << endl;
-    //     vector<DMatch> mm = m_matches.at(pair);
-    //     for (int i = 0; i < mm.size(); i++){
-    //         cout << mm[i].distance << ", ";
-    //     }
-    //     cout << endl;
-    // }
+    for (int n = 0; n < m_pairs.size(); n++){
+        vector<int> pair = m_pairs[n];
+        cout << "distance between (" << pair[0] << ", " << pair[1] << ") is: " << endl;
+        vector<DMatch> mm = m_matches.at(pair);
+        for (int i = 0; i < mm.size(); i++){
+            cout << mm[i].distance << ", ";
+        }
+        cout << endl;
+    }
+
     m_matching = true;
     cout << "Matching done\n" << endl;
 }
@@ -201,7 +204,7 @@ void Mosaicing :: RefineMatching(float threshold){
      // get the minimum distance and select
     for (int n = 0; n < m_pairs.size(); n++){
         vector<DMatch> mm = m_matches.at(m_pairs[n]);
-        vector<DMatch> refined = RefineMatches(threshold, mm);
+        vector<DMatch> refined = MatchesRefiner(threshold, mm);
         m_refined_matches.insert({m_pairs[n], refined});
         cout << "Refined pair (" << m_pairs[n][0] << ", " << m_pairs[n][1] << ") oldsize " << mm.size() << " newsize " << refined.size() << endl;
     }
@@ -231,8 +234,8 @@ void Mosaicing :: AffineTransform(float threshold){
             dst_pts.push_back(dst_pt);
       
             //DEBUG print 
-            cout << "(" << pair[0] << ", " << pair[1] << ") " << j << ": " 
-                << "src_pt: " << src_pt << " dst_pt: " << dst_pt << endl;
+        //     cout << "(" << pair[0] << ", " << pair[1] << ") " << j << ": " 
+        //         << "src_pt: " << src_pt << " dst_pt: " << dst_pt << endl;
         }
        
         Mat affine_transform;
