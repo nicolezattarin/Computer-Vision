@@ -86,6 +86,8 @@ int main(int argc, char** argv)
     drawMatches	(img1, keypoints1, img2, keypoints2, good_matches, matchesOut, Scalar(0,0,255), Scalar(0,255,0));
     imwrite("matches.png", matchesOut);
 
+    //aff
+
 
     return 0;
 }

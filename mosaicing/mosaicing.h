@@ -33,12 +33,15 @@ class Mosaicing{
         vector<vector<int>> GetPairs ();
         map<vector<int>, vector<DMatch>> GetRefinedMatches ();
         vector<DMatch> GetRefinedMatches (int i, int j);
+        map<vector<int>, Mat> GetAffineTransforms ();
+        vector<Mat> GetTranslatedImages();
 
         void SIFTdetection(int nfeatures = 100);
         void ORBdetection();
         void Matching();
-        void RefineMatching(float threshold = 0.8);
+        void RefineMatching(map<vector<int>, float>);
         void AffineTransform(float threshold);
+        void MergeImages();
 
     private:
         string m_dir;
@@ -51,11 +54,19 @@ class Mosaicing{
         map<vector<int>, vector<DMatch>> m_matches; // matches for each image, map with pair (i,j) and vector of matches
         map<vector<int>, vector<DMatch>> m_refined_matches;
         vector<vector<int>> m_pairs; // pairs of images to be matched
-        map<vector<int>, Mat> m_affine_transforms; // affine transforms for each image, map with pair (i,j) and affine transform
+        map<vector<int>, Mat> m_mask_affine_trans; // mask for each image, map with pair (i,j) and affine transform
+        // each mask is a mat of size 1 x N matches of values either 0 or 1
+        // Used to get if a match is an inlier in the homography 
+        map<vector<int>, Point2f> m_avg_translation; //avg translation for each pair
+        vector<Point2f> m_global_translation; //total translation of each image wrt the first one (top left)
+        vector<Mat> m_translated_images; // translated images
+        Mat m_merged_image; // merged images
         bool m_sift;
         bool m_orb;
         bool m_matching;
         bool m_refined_matching;
+        bool m_affine_transform;
+        bool m_translated;
 };
 
 

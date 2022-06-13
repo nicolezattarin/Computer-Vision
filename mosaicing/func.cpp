@@ -17,6 +17,15 @@ vector<vector<Mat>> load_images(string dir){
     return images;
  }
 
+/* 
+function to check if the number of images loaded is correct, 
+i.e. it is a perfect square becuase we limit ourselve to only square grids
+ */
+bool checkperfectsquare(int n){
+    if (ceil((double)sqrt(n)) == floor((double)sqrt(n))) {return true;}
+    else { return false; }
+}
+
 float minDistanceMatches(vector<DMatch> matches){
     float min = 0;
     for (DMatch match : matches){
@@ -30,8 +39,14 @@ float minDistanceMatches(vector<DMatch> matches){
     return min;
 }
 
-vector<DMatch> RefineMatches(float threshold, vector<DMatch> matches){
+vector<DMatch> MatchesRefiner(float threshold, vector<DMatch> matches){
     float minDist = minDistanceMatches(matches);
+
+    // DEBUG
+    // cout << "Min distance: " << minDist << endl;
+    if (minDist == 0){
+        minDist = 1;
+    }
     vector<DMatch> refinedMatches;
     for (DMatch match : matches){
         if (match.distance < threshold * minDist){
@@ -41,70 +56,62 @@ vector<DMatch> RefineMatches(float threshold, vector<DMatch> matches){
     return refinedMatches;
 }
 
+/* given a directory and a file containing thr fixed threshold,
+returns a vector of threshold used to refine matches */
 
-// void DrawMatches(Mat img1, Mat img2, vector<KeyPoint> keypoints1, vector<KeyPoint> keypoints2, vector<DMatch> matches){
+ map<vector<int>, float> GetThreshold(string file, string dataset, vector<vector<int>> pairs){
 
+    map<vector<int>, float> thresholds;
+    ifstream in(file);
+    string line;
+    // skip the first line
+    getline(in, line);
+    while (getline(in, line)){
+        stringstream ss(line);
+        string dataset_name;
+        ss >> dataset_name;
+        if (dataset_name == dataset){
+            for (int i = 0; i<pairs.size(); i++){
+                float threshold;
+                ss >> threshold;
+                thresholds.insert({pairs[i], threshold});
+            }
+        }
+    }
+    if (thresholds.size() == 0){
+        cerr << "Error: no threshold found for dataset " << dataset << endl;
+    }
+    return thresholds;
+}
 
-// def drawMatches(img1, kp1, img2, kp2, matches):
-//     """
-//     My own implementation of cv2.drawMatches as OpenCV 2.4.9
-//     does not have this function available but it's supported in
-//     OpenCV 3.0.0
+// void translateImg(Mat& img, Mat& outimg, Point2f translation, Size s){
+//     Point2f src = Point2f(0, 0);
+//     Point2f dst = static_cast<Point2f> (translation);
+//     Mat trans_img;
+//     warpAffine(img, trans_img, getAffineTransform(&src, &dst), s);
+//     outimg = trans_img.clone();
+// }
 
-//     This function takes in two images with their associated 
-//     keypoints, as well as a list of DMatch data structure (matches) 
-//     that contains which keypoints matched in which images.
+//brute force
+void translateImgs(vector<Mat>& images, vector<Mat>& trans_images, vector<Point2f> translations){
 
-//     An image will be produced where a montage is shown with
-//     the first image followed by the second image beside it.
-
-//     Keypoints are delineated with circles, while lines are connected
-//     between matching keypoints.
-
-//     img1,img2 - Grayscale images
-//     kp1,kp2 - Detected list of keypoints through any of the OpenCV keypoint 
-//               detection algorithms
-//     matches - A list of matches of corresponding keypoints through any
-//               OpenCV keypoint matching algorithm
-//     """
-
-//     # Create a new output image that concatenates the two images together
-//     # (a.k.a) a montage
-//     rows1 = img1.shape[0]
-//     cols1 = img1.shape[1]
-//     rows2 = img2.shape[0]
-//     cols2 = img2.shape[1]
-
-//     out = np.zeros((max([rows1,rows2]),cols1+cols2,3), dtype='uint8')
-
-//     # Place the first image to the left
-//     out[:rows1,:cols1,:] = np.dstack([img1, img1, img1])
-
-//     # Place the next image to the right of it
-//     out[:rows2,cols1:cols1+cols2,:] = np.dstack([img2, img2, img2])
-
-//     # For each pair of points we have between both images
-//     # draw circles, then connect a line between them
-//     for mat in matches:
-
-//         # Get the matching keypoints for each of the images
-//         img1_idx = mat.queryIdx
-//         img2_idx = mat.trainIdx
-
-//         # x - columns
-//         # y - rows
-//         (x1,y1) = kp1[img1_idx].pt
-//         (x2,y2) = kp2[img2_idx].pt
-
-//         # Draw a small circle at both co-ordinates
-//         # radius 4
-//         # colour blue
-//         # thickness = 1
-//         cv2.circle(out, (int(x1),int(y1)), 4, (255, 0, 0), 1)   
-//         cv2.circle(out, (int(x2)+cols1,int(y2)), 4, (255, 0, 0), 1)
-
-//         # Draw a line in between the two points
-//         # thickness = 1
-//         # colour blue
-//         cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
-
+    float min_x, max_x, min_y, max_y;
+    min_x = max_x = translations[0].x;
+    min_y = max_y = translations[0].y;
+    for (Point2f translation: translations) {
+        min_x = min(min_x, translation.x);
+        max_x = max(max_x, translation.x);
+        min_y = min(min_y, translation.y);
+        max_y = max(max_y, translation.y);
+    }
+    int n_images = images.size();
+    int size_x = max_x - min_x + images[n_images-1].cols;
+    int size_y = max_y - min_y + images[n_images-1].rows;
+    cout << size_x << " " << size_y << endl;
+    Mat t = Mat(size_y, size_x, CV_8UC1, Scalar(128,128,128));
+    for (int i=0; i<n_images; i++) {
+        Rect limits = Rect(translations[i].x - min_x, translations[i].y - min_y, images[i].cols, images[i].rows);
+        trans_images.push_back(t(limits));
+    }
+    
+}

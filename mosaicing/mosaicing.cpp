@@ -54,6 +54,8 @@ Mosaicing :: Mosaicing(string dir){
     m_orb = false;
     m_matching = false;
     m_refined_matching = false;
+    m_affine_transform = false;
+    m_translated = false;
 }
 
 Mat Mosaicing :: GetImg (int i){
@@ -73,24 +75,39 @@ int Mosaicing :: GetNumImgs(){
 }
 
 vector<KeyPoint> Mosaicing :: GetKeypoints(int i){
-    return m_keypoints[i];
+    if (m_sift || m_orb) return m_keypoints[i];
+    else {
+        cerr << "Error: no keypoints found" << endl;
+    }
 }
 
 vector<KeyPoint> Mosaicing :: GetKeypoints(int i, int j){
-    return m_keypoints[i*m_grid_size + j];
+    if (m_sift || m_orb) return m_keypoints[i*m_grid_size + j];
+    else {
+        cerr << "Error: no keypoints found" << endl;
+    }
 }
 
 Mat Mosaicing :: GetDescriptor(int i, int j){
-    return m_descriptors[i*m_grid_size + j];
+    if (m_sift || m_orb) return m_descriptors[i*m_grid_size + j];
+    else{
+        cerr << "Error: no descriptors found" << endl;
+    }
 }
 
 map <vector<int>, vector<DMatch>> Mosaicing :: GetMatches(){
-    return m_matches;
+    if (m_matching) return m_matches;
+    else {
+        cerr << "Error: no matches found" << endl;
+    }
 }
 
 vector<DMatch> Mosaicing :: GetMatches(int i, int j){
     vector <int> pair = {i, j};
-    return m_matches.at(pair);
+    if (m_matching) return m_matches.at(pair);
+    else {
+        cerr << "Error: no matches found" << endl;
+    }
 }
 
 vector<vector<int>> Mosaicing :: GetPairs(){
@@ -98,12 +115,32 @@ vector<vector<int>> Mosaicing :: GetPairs(){
 }
 
 map<vector<int>, vector<DMatch>> Mosaicing :: GetRefinedMatches(){
-    return m_refined_matches;
+    if (m_refined_matching) return m_refined_matches;
+    else {
+        cerr << "Error: no refined matches found" << endl;
+    }
 }
 
 vector<DMatch> Mosaicing :: GetRefinedMatches(int i, int j){
     vector <int> pair = {i, j};
-    return m_refined_matches.at(pair);
+    if (m_refined_matching) return m_refined_matches.at(pair);
+    else {
+        cerr << "Error: no refined matches found" << endl;
+    }
+}
+
+map<vector<int>, Mat> Mosaicing :: GetAffineTransforms(){
+    if (m_affine_transform) return m_mask_affine_trans;
+    else {
+        cerr << "Error: no affine transforms found" << endl;
+    }
+}
+
+vector <Mat> Mosaicing :: GetTranslatedImages(){
+    if (m_translated) return m_translated_images;
+    else {
+        cerr << "Error: no translated images found" << endl;
+    }
 }
 
 void Mosaicing :: SIFTdetection(int nfeatures){
@@ -180,19 +217,19 @@ void Mosaicing :: Matching(){
     // DEBUG print matches
     for (int n = 0; n < m_pairs.size(); n++){
         vector<int> pair = m_pairs[n];
-        cout << "distance between (" << pair[0] << ", " << pair[1] << ") is: " << endl;
         vector<DMatch> mm = m_matches.at(pair);
-        for (int i = 0; i < mm.size(); i++){
-            cout << mm[i].distance << ", ";
-        }
-        cout << endl;
-    }
 
+        // DEBUG print matches distance
+        // for (int i = 0; i < mm.size(); i++){
+        //     cout << mm[i].distance << ", ";
+        // }
+        // cout << endl;
+    }
     m_matching = true;
     cout << "Matching done\n" << endl;
 }
 
-void Mosaicing :: RefineMatching(float threshold){
+void Mosaicing :: RefineMatching(map<vector<int>, float> thresholds){
     // Refine by selecting the matches with distance less
     // than threshold * min_distance,for each pair
 
@@ -201,12 +238,16 @@ void Mosaicing :: RefineMatching(float threshold){
         cerr << "Error: matching not performed, perform matching before refining" << endl;
         return;
     }
-     // get the minimum distance and select
+    // thresholds are assumed to be given as a map of pairs and their thresholds
+    // pair01 pair03 pair12 pair14 pair25 pair34 pair36 pair45 pair47 pair67
+    
+    // get the minimum distance and select
     for (int n = 0; n < m_pairs.size(); n++){
-        vector<DMatch> mm = m_matches.at(m_pairs[n]);
-        vector<DMatch> refined = MatchesRefiner(threshold, mm);
-        m_refined_matches.insert({m_pairs[n], refined});
-        cout << "Refined pair (" << m_pairs[n][0] << ", " << m_pairs[n][1] << ") oldsize " << mm.size() << " newsize " << refined.size() << endl;
+        vector<int> pair = m_pairs[n];
+        vector<DMatch> match = m_matches.at(pair);
+        vector<DMatch> refined = MatchesRefiner(thresholds.at(pair), match);
+        m_refined_matches.insert({pair, refined});
+        cout << "Refined pair (" << pair[0] << ", " << pair[1] << ") oldsize " << match.size() << " newsize " << refined.size() << endl;
     }
     m_refined_matching = true;
     cout << "Matching refined\n" <<endl;
@@ -233,15 +274,102 @@ void Mosaicing :: AffineTransform(float threshold){
             src_pts.push_back(src_pt);
             dst_pts.push_back(dst_pt);
       
-            //DEBUG print 
+        // DEBUG print points
         //     cout << "(" << pair[0] << ", " << pair[1] << ") " << j << ": " 
         //         << "src_pt: " << src_pt << " dst_pt: " << dst_pt << endl;
+        
         }
        
         Mat affine_transform;
-        // findHomography(src_pts, dst_pts, affine_transform, RANSAC, threshold);
-        m_affine_transforms.insert({pair, affine_transform});
+        // COMPUTATIONAL CHOICE: since findHomography  needs at least 4 matches, 
+        // instead of setting a global threshold for matching refinement, 
+        // we set a threshold for the pair of matches
+        findHomography(src_pts, dst_pts, affine_transform, RANSAC, threshold);
+        m_mask_affine_trans.insert({pair, affine_transform});
+
+        // for each pair compute the translation
+        Point2f avg_translation;
+        int counter_mask = 0;
+        for (int i = 0; i<src_pts.size(); i++) {
+            if (affine_transform.at<uchar>(i, 0)) { 
+                avg_translation += (src_pts[i] - dst_pts[i]);
+                counter_mask++;
+            }
+        }
+        if (counter_mask > 0) {m_avg_translation.insert({pair, avg_translation/(float)counter_mask});}
+        else {m_avg_translation.insert({pair, Point2f(0,0)});}
+       }
+
+    for (int n = 0; n < m_pairs.size(); n++){
+        vector<int> pair = m_pairs[n];
+        cout << "pair (" << pair[0] << ", " << pair[1] << ") translation: " << m_avg_translation.at(pair) << endl;
     }
+    m_affine_transform = true;
+    cout << "Affine transform done\n" << endl;
 }
 
-	
+void Mosaicing :: MergeImages(){
+
+    if (!m_refined_matching){
+        cerr << "Error: refined matching not performed, perform refined matching before merging" << endl;
+        return;
+    }
+
+    cout << "\nCompute global translation" << endl;
+    // find pairs of images to be matched
+    vector<Point2f> horizontal_translation = {Point2f(0, 0)}; // first image is not translated
+    vector<Point2f> vertical_translation = {Point2f(0, 0)};
+    Point2f ht = Point2f(0, 0);
+    Point2f vt = Point2f(0, 0);
+
+    for (int n = 0; n < m_num_images-1; n++){
+        //go though therow and accumulate the translation for each row, 
+        //save a vector with the horizontal translation for each image
+        if (n%m_grid_size != 0){
+            ht += m_avg_translation.at({n-1, n});
+            horizontal_translation.push_back(ht);
+        }
+        else{
+            ht = Point2f(0, 0);
+            horizontal_translation.push_back(ht);
+        }
+        if (n<m_num_images-m_grid_size-1){
+            vt += m_avg_translation.at({n, n+m_grid_size});
+            horizontal_translation.push_back(vt);
+        }
+        else{
+            vt = Point2f(0, 0);
+            vertical_translation.push_back(vt);
+        }
+    }
+    for (int n = 0; n < m_num_images; n++){
+        m_global_translation.push_back(static_cast<cv::Point2i>(horizontal_translation[n]+vertical_translation[n]));
+        cout << "image " <<  n << " global translation: " << m_global_translation[n] << endl;
+    }
+
+    cout << "\nTranslate images" << endl;
+    // use as size the size of the top left image
+    Size size = m_images[0].size();
+
+    // translate the images
+
+    translateImgs(m_images, m_translated_images, m_global_translation);
+    m_translated = true;
+
+    // cout << "\nMerge images" << endl;
+    // // merge the images
+    // vector<Mat> lines; // translated images concatenated horizontally
+    // Mat line;
+    // for (int n = 0; n < m_num_images; n++){
+    //     if (n%m_grid_size != 0){
+    //         hconcat (line, m_translated_images[n], line);
+    //     }
+    //     else{
+    //         lines.push_back(line);
+    //         line = m_translated_images[n];
+    //     }
+    // }
+    // for (int n = 1; n < lines.size(); n++){
+    //     vconcat (lines[n-1], lines[n], m_merged_image);
+    // }
+}

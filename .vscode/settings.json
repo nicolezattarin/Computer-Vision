@@ -25,6 +25,7 @@
         "tuple": "cpp",
         "type_traits": "cpp",
         "*.tcc": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "iostream": "cpp"
     }
 }
